@@ -206,3 +206,5 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 - GTK Team pour GTK4
 - Communauté Rust pour les excellentes bibliothèques
 - Utilisateurs de TLP pour l'inspiration
+# Test pre-commit hook
+
