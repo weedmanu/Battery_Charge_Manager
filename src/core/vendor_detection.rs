@@ -313,7 +313,7 @@ mod tests {
     fn test_identify_vendor_asus() {
         let vendor = VendorInfo::identify_vendor("asustek computer inc.", "TUF Gaming");
         assert_eq!(vendor, VendorType::Asus);
-        
+
         let vendor2 = VendorInfo::identify_vendor("asus", "VivoBook");
         assert_eq!(vendor2, VendorType::Asus);
     }
@@ -322,7 +322,7 @@ mod tests {
     fn test_identify_vendor_lenovo() {
         let vendor = VendorInfo::identify_vendor("lenovo", "ThinkPad X1");
         assert_eq!(vendor, VendorType::Lenovo);
-        
+
         let vendor2 = VendorInfo::identify_vendor("generic", "ThinkPad T480");
         assert_eq!(vendor2, VendorType::Lenovo);
     }
@@ -383,7 +383,10 @@ mod tests {
         assert!(!files.start_paths.is_empty());
         assert!(!files.stop_paths.is_empty());
         // Vérifier que les chemins génériques sont présents
-        assert!(files.stop_paths.iter().any(|p| p.contains("charge_control_end_threshold")));
+        assert!(files
+            .stop_paths
+            .iter()
+            .any(|p| p.contains("charge_control_end_threshold")));
     }
 
     #[test]

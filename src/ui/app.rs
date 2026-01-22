@@ -129,13 +129,13 @@ fn setup_auto_update(
                 let threshold_start_opt = widgets.threshold_start_label.clone();
                 let alarm_opt = widgets.alarm_label.clone();
 
-            let info = match BatteryInfo::new(&current_battery) {
-                Ok(info) => info,
-                Err(e) => {
-                    eprintln!("Erreur lors du rafraîchissement: {}", e);
-                    return glib::ControlFlow::Continue;
-                }
-            };
+                let info = match BatteryInfo::new(&current_battery) {
+                    Ok(info) => info,
+                    Err(e) => {
+                        eprintln!("Erreur lors du rafraîchissement: {}", e);
+                        return glib::ControlFlow::Continue;
+                    }
+                };
                 let power_supply = PowerSupplyInfo::new();
 
                 // Mise à jour alimentation

@@ -17,7 +17,11 @@ impl std::fmt::Display for BatteryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             BatteryError::InvalidBatteryName(name) => {
-                write!(f, "Nom de batterie invalide: '{}'. Le nom doit commencer par 'BAT'.", name)
+                write!(
+                    f,
+                    "Nom de batterie invalide: '{}'. Le nom doit commencer par 'BAT'.",
+                    name
+                )
             }
             BatteryError::IoError(e) => write!(f, "Erreur I/O: {}", e),
         }
@@ -59,9 +63,9 @@ pub struct BatteryInfo {
 
 impl BatteryInfo {
     /// Crée une nouvelle instance `BatteryInfo` en lisant les fichiers système.
-    /// 
+    ///
     /// # Erreurs
-    /// 
+    ///
     /// Retourne `BatteryError::InvalidBatteryName` si le nom ne commence pas par "BAT".
     pub fn new(battery_name: &str) -> Result<Self, BatteryError> {
         // Validation du nom de batterie
@@ -283,7 +287,7 @@ mod tests {
         if let Err(e) = result {
             // Si erreur, ce doit être IoError, pas InvalidBatteryName
             match e {
-                BatteryError::IoError(_) => {}, // OK
+                BatteryError::IoError(_) => {} // OK
                 BatteryError::InvalidBatteryName(_) => panic!("BAT1 devrait être un nom valide"),
             }
         }
@@ -362,7 +366,7 @@ mod tests {
             charge_now: 4000000,
             charge_full: 5000000,
             charge_full_design: 5000000,
-            current_now: 1000000, // 1A
+            current_now: 1000000,  // 1A
             voltage_now: 12000000, // 12V
             cycle_count: 50,
             health_percent: 100.0,
@@ -444,8 +448,8 @@ mod tests {
             status: "Discharging".to_string(),
             capacity_percent: 75,
             capacity_level: "Normal".to_string(),
-            charge_now: 3750000, // 3750 mAh
-            charge_full: 5000000, // 5000 mAh
+            charge_now: 3750000,         // 3750 mAh
+            charge_full: 5000000,        // 5000 mAh
             charge_full_design: 5500000, // 5500 mAh
             current_now: 500000,
             voltage_now: 11800000,
@@ -490,16 +494,16 @@ mod tests {
         };
 
         assert!(info.get_status_markup().contains("En charge"));
-        
+
         info.status = "Discharging".to_string();
         assert!(info.get_status_markup().contains("Décharge"));
-        
+
         info.status = "Full".to_string();
         assert!(info.get_status_markup().contains("Pleine"));
-        
+
         info.status = "Not charging".to_string();
         assert!(info.get_status_markup().contains("Pas en charge"));
-        
+
         info.status = "Unknown".to_string();
         assert!(info.get_status_markup().contains("Inconnu"));
     }
@@ -559,7 +563,7 @@ mod tests {
         };
 
         assert!(info.service_status_markup().contains("Actif"));
-        
+
         info.service_active = false;
         assert!(info.service_status_markup().contains("Inactif"));
     }
