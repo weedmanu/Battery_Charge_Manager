@@ -27,6 +27,7 @@ echo "Suppression des fichiers..."
 rm -f /usr/local/bin/battery-manager
 rm -f /usr/local/bin/battery-manager-restore
 rm -f /usr/share/applications/battery-manager.desktop
+rm -f /usr/share/pixmaps/battery-manager.png
 rm -f /etc/systemd/system/battery-manager.service
 
 # Recharger systemd
