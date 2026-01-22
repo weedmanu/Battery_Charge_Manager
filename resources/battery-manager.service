@@ -1,0 +1,11 @@
+[Unit]
+Description=Battery Manager - Restore charge thresholds
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/battery-manager-restore
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

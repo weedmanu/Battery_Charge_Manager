@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Battery Manager
+Name[fr]=Gestionnaire de Batterie
+Comment=Manage battery charge thresholds
+Comment[fr]=Gérer les seuils de charge de la batterie
+Exec=battery-manager
+Icon=battery
+Terminal=false
+Categories=System;Settings;
+Keywords=battery;power;charge;threshold;
+StartupNotify=true
