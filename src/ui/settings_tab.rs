@@ -1,11 +1,26 @@
+//! Settings tab for configuring battery charge thresholds
+//!
+//! Allows users to adjust start/stop charge thresholds, enable/disable
+//! systemd service, and view hardware support information.
+
 use gtk4::prelude::*;
 use gtk4::{Adjustment, Box, Button, Label, Orientation, ScrolledWindow, SpinButton, Switch};
 use std::process::Command;
 
+use crate::core::i18n::t;
 use crate::core::{BatteryInfo, VendorInfo};
 use crate::ui::components::InfoCard;
 
-/// Construit l'onglet Réglages
+/// Builds the Settings tab content
+///
+/// # Arguments
+///
+/// * `battery_info` - Current battery information
+/// * `current_battery` - Name of active battery (e.g., "BAT0")
+///
+/// # Returns
+///
+/// ScrolledWindow containing settings controls
 pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> ScrolledWindow {
     let scrolled = ScrolledWindow::new();
     scrolled.set_vexpand(true);
@@ -18,14 +33,17 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
 
     // === Card Informations Fabricant ===
     let vendor_info = VendorInfo::detect();
-    let (vendor_frame, vendor_box) = InfoCard::create("🏭 Informations du Système");
+    let (vendor_frame, vendor_box) = InfoCard::create(&format!("🏭 {}", t("card_system_info")));
     vendor_box.set_spacing(5);
 
     let vendor_label = Label::new(None);
     vendor_label.set_halign(gtk4::Align::Start);
     vendor_label.set_markup(&format!(
-        "<span weight='bold'>Fabricant:</span> {} | <span weight='bold'>Modèle:</span> {}",
-        vendor_info.manufacturer, vendor_info.product_name
+        "<span weight='bold'>{}:</span> {} | <span weight='bold'>{}:</span> {}",
+        t("manufacturer"),
+        vendor_info.manufacturer,
+        t("model"),
+        vendor_info.product_name
     ));
     vendor_box.append(&vendor_label);
 
@@ -42,15 +60,19 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
         "❌"
     };
     support_label.set_markup(&format!(
-        "<span size='small'>Seuil de début: {} | Seuil de fin: {}</span>",
-        start_support, stop_support
+        "<span size='small'>{}: {} | {}: {}</span>",
+        t("threshold_start"),
+        start_support,
+        t("threshold_stop"),
+        stop_support
     ));
     vendor_box.append(&support_label);
 
     content_box.append(&vendor_frame);
 
     // === Card Seuils de charge ===
-    let (settings_frame, settings_box) = InfoCard::create("⚙️ Seuils de charge");
+    let (settings_frame, settings_box) =
+        InfoCard::create(&format!("⚙️ {}", t("card_threshold_settings")));
     settings_box.set_spacing(8);
 
     // Seuil début (seulement si supporté)
@@ -58,9 +80,12 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
         let start_row = Box::new(Orientation::Horizontal, 10);
         start_row.set_homogeneous(true);
 
-        let start_label = Label::new(Some("Seuil de début (%)"));
+        let start_label = Label::new(Some(&t("threshold_start_pct")));
         start_label.set_halign(gtk4::Align::Start);
-        start_label.set_markup("<span weight='bold'>Seuil de début (%)</span>");
+        start_label.set_markup(&format!(
+            "<span weight='bold'>{}</span>",
+            t("threshold_start_pct")
+        ));
 
         let start_adj = Adjustment::new(
             battery_info.charge_start_threshold.unwrap_or(75) as f64,
@@ -85,9 +110,12 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     let stop_row = Box::new(Orientation::Horizontal, 10);
     stop_row.set_homogeneous(true);
 
-    let stop_label = Label::new(Some("Seuil de fin de charge (%)"));
+    let stop_label = Label::new(Some(&t("threshold_stop_pct")));
     stop_label.set_halign(gtk4::Align::Start);
-    stop_label.set_markup("<span weight='bold'>Seuil de fin de charge (%)</span>");
+    stop_label.set_markup(&format!(
+        "<span weight='bold'>{}</span>",
+        t("threshold_stop_pct")
+    ));
 
     let stop_adj = Adjustment::new(
         battery_info.charge_stop_threshold.unwrap_or(80) as f64,
@@ -123,16 +151,20 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
 
     content_box.append(&settings_frame);
 
-    // === Card Service Battery Manager ===
-    let (service_frame, service_box) = InfoCard::create("🔄 Service Battery Manager");
+    // === Card Service ===
+    let (service_frame, service_box) =
+        InfoCard::create(&format!("🔄 {}", t("card_service_manager")));
     service_box.set_spacing(8);
 
     let service_row = Box::new(Orientation::Horizontal, 10);
 
-    let service_label = Label::new(Some("Activer le service"));
+    let service_label = Label::new(Some(&t("enable_service")));
     service_label.set_halign(gtk4::Align::Start);
     service_label.set_hexpand(true);
-    service_label.set_markup("<span weight='bold'>Activer le service systemd</span>");
+    service_label.set_markup(&format!(
+        "<span weight='bold'>{}</span>",
+        t("enable_systemd_service")
+    ));
 
     let service_switch = Switch::new();
     service_switch.set_active(battery_info.service_active);
@@ -162,14 +194,12 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
 
     let note1 = Label::new(None);
     note1.set_halign(gtk4::Align::Start);
-    note1.set_markup("<span size='small'><b>Activé :</b> applique les seuils immédiatement et de façon persistante</span>");
+    note1.set_markup(&format!("<span size='small'>{}</span>", t("note_enabled")));
     note_box.append(&note1);
 
     let note2 = Label::new(None);
     note2.set_halign(gtk4::Align::Start);
-    note2.set_markup(
-        "<span size='small'><b>Désactivé :</b> restaure les seuils d'origine du système</span>",
-    );
+    note2.set_markup(&format!("<span size='small'>{}</span>", t("note_disabled")));
     note_box.append(&note2);
 
     note_frame.set_child(Some(&note_box));
@@ -185,7 +215,7 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
 
     // Bouton unique pour appliquer toutes les modifications (centré en dehors du frame)
     let current_battery_clone = current_battery.to_string();
-    let apply_button = Button::with_label("Appliquer tous les réglages");
+    let apply_button = Button::with_label(&t("apply_all_settings"));
     apply_button.set_margin_top(10);
     apply_button.set_halign(gtk4::Align::Center);
 
@@ -232,9 +262,10 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
             // Validation
             if start_spin.as_ref().is_some()
                 && start >= stop {
-                    status_message.set_markup(
-                        "<span color='red'>Erreur: le seuil de début doit être inférieur au seuil de fin</span>"
-                    );
+                    status_message.set_markup(&format!(
+                        "<span color='red'>{}</span>",
+                        t("error_start_greater_stop")
+                    ));
                     return;
                 }
 
@@ -320,23 +351,28 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
 
                     match output {
                         Ok(result) if result.status.success() => {
-                            let service_status = if enable_service { "activé" } else { "désactivé" };
+                            let service_status = if enable_service { t("enabled") } else { t("disabled") };
+                            let threshold_msg = if start_spin.is_some() {
+                                format!("{}%-{}%", start, stop)
+                            } else {
+                                format!("{}%", stop)
+                            };
                             status_message.set_markup(&format!(
-                                "<span color='green'>✓ Réglages appliqués: {}%-{}%, Alarme: {:.1}%, Service: {}</span>",
-                                start, stop, alarm_pct, service_status
+                                "<span color='green'>✓ {}: {}, {}: {:.1}%, {}: {}</span>",
+                                t("settings_applied"), threshold_msg, t("alarm"), alarm_pct, t("service"), service_status
                             ));
                         }
                         Ok(result) => {
                             let error = String::from_utf8_lossy(&result.stderr);
-                            status_message.set_markup(&format!("<span color='red'>Erreur: {}</span>", error));
+                            status_message.set_markup(&format!("<span color='red'>{}: {}</span>", t("error"), error));
                         }
                         Err(err) => {
-                            status_message.set_markup(&format!("<span color='red'>Erreur d'exécution: {}</span>", err));
+                            status_message.set_markup(&format!("<span color='red'>{}: {}</span>", t("error_execution"), err));
                         }
                     }
                 }
                 _ => {
-                    status_message.set_markup("<span color='red'>Erreur: pkexec n'est pas installé. Installez policykit-1 ou polkit.</span>");
+                    status_message.set_markup(&format!("<span color='red'>{}: pkexec n'est pas installé. Installez policykit-1 ou polkit.</span>", t("error")));
                 }
             }
             }

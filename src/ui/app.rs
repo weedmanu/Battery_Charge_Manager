@@ -1,3 +1,8 @@
+//! Main application window and UI initialization
+//!
+//! Builds the GTK4 application window with notebook tabs for battery
+//! information and settings. Manages auto-refresh timer.
+
 use glib::timeout_add_local;
 use gtk4::prelude::*;
 use gtk4::{Application, ApplicationWindow, Box, Label, Notebook, Orientation, Separator};
@@ -5,11 +10,21 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
 
+use crate::core::i18n::t;
 use crate::core::{BatteryInfo, PowerSupplyInfo};
 use crate::ui::info_tab::build_info_tab;
 use crate::ui::settings_tab::build_settings_tab;
+use crate::ui::ui_tab::build_ui_tab;
+use crate::{debug, debug_ui};
 
-/// Point d'entrée pour construire l'interface utilisateur
+/// Builds the main application UI window
+///
+/// Creates a notebook with Information and Settings tabs. Shows
+/// a fallback window if no battery is detected.
+///
+/// # Arguments
+///
+/// * `app` - GTK Application instance
 pub fn build_ui(app: &Application) {
     let batteries = BatteryInfo::get_battery_list();
 
@@ -19,10 +34,12 @@ pub fn build_ui(app: &Application) {
     }
 
     let current_battery = batteries[0].clone();
+    debug!("Building UI for battery: {}", current_battery);
+
     let battery_info = match BatteryInfo::new(&current_battery) {
         Ok(info) => Rc::new(RefCell::new(info)),
         Err(e) => {
-            eprintln!("Erreur lors de la création de BatteryInfo: {}", e);
+            eprintln!("{}: {}", t("error_battery_init"), e);
             build_no_battery_window(app);
             return;
         }
@@ -30,7 +47,7 @@ pub fn build_ui(app: &Application) {
 
     let window = ApplicationWindow::builder()
         .application(app)
-        .title("Battery Manager")
+        .title(t("app_title"))
         .default_width(800)
         .default_height(400)
         .resizable(false)
@@ -44,7 +61,10 @@ pub fn build_ui(app: &Application) {
 
     // Header
     let header_label = Label::new(None);
-    header_label.set_markup("<span size='x-large' weight='bold'>🔋 Battery Manager</span>");
+    header_label.set_markup(&format!(
+        "<span size='x-large' weight='bold'>🔋 {}</span>",
+        t("app_title")
+    ));
     main_box.append(&header_label);
     main_box.append(&Separator::new(Orientation::Horizontal));
 
@@ -53,21 +73,32 @@ pub fn build_ui(app: &Application) {
     notebook.set_vexpand(true);
 
     // Onglet Informations
+    debug_ui!("Building information tab");
     let info = battery_info.borrow();
     let power_supply = PowerSupplyInfo::new();
     let (info_content, updatable_widgets) = build_info_tab(&info, &power_supply);
     drop(info);
 
-    let info_tab_label = Label::new(Some("📊 Informations"));
+    let info_tab_label = Label::new(Some(&format!("📊 {}", t("tab_info"))));
     notebook.append_page(&info_content, Some(&info_tab_label));
 
     // Onglet Réglages
+    debug_ui!("Building settings tab");
     let settings_content = build_settings_tab(&battery_info.borrow(), &current_battery);
-    let settings_tab_label = Label::new(Some("⚙️ Réglages"));
+    let settings_tab_label = Label::new(Some(&format!("⚙️ {}", t("tab_settings"))));
     notebook.append_page(&settings_content, Some(&settings_tab_label));
+
+    // Onglet Interface
+    debug_ui!("Building UI preferences tab");
+    let ui_content = build_ui_tab();
+    let ui_tab_label = Label::new(Some(&format!("🎨 {}", t("tab_ui"))));
+    notebook.append_page(&ui_content, Some(&ui_tab_label));
 
     main_box.append(&notebook);
     window.set_child(Some(&main_box));
+
+    // Apply saved theme
+    crate::ui::theme::apply_current_theme();
 
     // Auto-update toutes les 5 secondes
     setup_auto_update(battery_info.clone(), current_battery, updatable_widgets);
@@ -75,16 +106,22 @@ pub fn build_ui(app: &Application) {
     window.present();
 }
 
-/// Affiche une fenêtre quand aucune batterie n'est détectée
+/// Displays fallback window when no battery is detected
+///
+/// # Arguments
+///
+/// * `app` - GTK Application instance
 fn build_no_battery_window(app: &Application) {
+    debug!("No battery detected, showing fallback window");
+
     let window = ApplicationWindow::builder()
         .application(app)
-        .title("Battery Manager")
+        .title(t("app_title"))
         .default_width(400)
         .default_height(200)
         .build();
 
-    let label = Label::new(Some("⚠️ Aucune batterie détectée sur ce système"));
+    let label = Label::new(Some(&format!("⚠️ {}", t("no_battery"))));
     label.set_margin_top(20);
     label.set_margin_bottom(20);
     label.set_margin_start(20);
@@ -94,12 +131,22 @@ fn build_no_battery_window(app: &Application) {
     window.present();
 }
 
-/// Configure la mise à jour automatique des widgets
+/// Sets up automatic widget refresh timer
+///
+/// Refreshes battery information every 5 seconds.
+///
+/// # Arguments
+///
+/// * `battery_info` - Shared battery information
+/// * `current_battery` - Battery name to monitor
+/// * `widgets` - Updatable widget references
 fn setup_auto_update(
     battery_info: Rc<RefCell<BatteryInfo>>,
     current_battery: String,
     widgets: crate::ui::components::UpdatableWidgets,
 ) {
+    debug_ui!("Setting up 5-second auto-refresh timer");
+
     timeout_add_local(
         Duration::from_secs(5),
         glib::clone!(
@@ -163,10 +210,14 @@ fn setup_auto_update(
                 ));
 
                 // Mise à jour valeurs électriques
-                voltage_value.set_text(&format!("Tension: {:.2} V", info.voltage_v()));
-                current_value.set_text(&format!("Courant: {} mA", info.current_ma()));
-                power_value.set_text(&format!("Puissance: {:.2} W", info.power_watts()));
-                charge_now_value.set_text(&format!("Actuelle: {} mAh", info.charge_now_mah()));
+                voltage_value.set_text(&format!("{}: {:.2} V", t("voltage"), info.voltage_v()));
+                current_value.set_text(&format!("{}: {} mA", t("current"), info.current_ma()));
+                power_value.set_text(&format!("{}: {:.2} W", t("power"), info.power_watts()));
+                charge_now_value.set_text(&format!(
+                    "{}: {} mAh",
+                    t("current_capacity"),
+                    info.charge_now_mah()
+                ));
 
                 // Mise à jour des seuils
                 if let Some(ref start_label) = threshold_start_opt {

@@ -1,6 +1,11 @@
+//! Vendor detection and battery threshold file discovery
+//!
+//! Identifies laptop manufacturer and locates charge threshold control files
+//! in `/sys/class/power_supply/`.
+
 use std::fs;
 
-/// Détection du fabricant et méthodes de gestion de batterie
+/// Laptop vendor types with different battery control interfaces
 #[derive(Debug, Clone, PartialEq)]
 pub enum VendorType {
     Asus,
@@ -18,6 +23,7 @@ pub enum VendorType {
     Generic,
 }
 
+/// Vendor-specific battery information
 #[derive(Debug, Clone)]
 pub struct VendorInfo {
     pub manufacturer: String,
@@ -26,6 +32,7 @@ pub struct VendorInfo {
     pub supports_stop_threshold: bool,
 }
 
+/// Battery charge threshold file paths
 #[derive(Debug, Clone)]
 pub struct ThresholdFiles {
     pub start_paths: Vec<String>,
@@ -33,7 +40,13 @@ pub struct ThresholdFiles {
 }
 
 impl VendorInfo {
-    /// Détecte automatiquement le fabricant du système
+    /// Automatically detects system vendor and threshold support
+    ///
+    /// Reads DMI information and checks for threshold files existence
+    ///
+    /// # Returns
+    ///
+    /// VendorInfo with manufacturer, product name, and threshold support flags
     pub fn detect() -> Self {
         let manufacturer = Self::read_dmi("sys_vendor")
             .unwrap_or_else(|| "Unknown".to_string())
@@ -62,14 +75,32 @@ impl VendorInfo {
         }
     }
 
-    /// Lit les informations DMI du système
+    /// Reads DMI system information from `/sys/class/dmi/id/`
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - DMI field name (e.g., "sys_vendor", "product_name")
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - DMI field value (trimmed)
+    /// * `None` - Field doesn't exist or read error
     fn read_dmi(field: &str) -> Option<String> {
         fs::read_to_string(format!("/sys/class/dmi/id/{}", field))
             .ok()
             .map(|s| s.trim().to_string())
     }
 
-    /// Identifie le type de fabricant
+    /// Identifies laptop vendor type from manufacturer and product strings
+    ///
+    /// # Arguments
+    ///
+    /// * `manufacturer` - Manufacturer string (e.g., "asus", "lenovo")
+    /// * `product` - Product name string
+    ///
+    /// # Returns
+    ///
+    /// Corresponding VendorType enum variant
     fn identify_vendor(manufacturer: &str, product: &str) -> VendorType {
         // ASUS
         if manufacturer.contains("asus") || manufacturer.contains("asustek") {
@@ -134,7 +165,15 @@ impl VendorInfo {
         VendorType::Generic
     }
 
-    /// Retourne les chemins de fichiers de seuils selon le fabricant
+    /// Returns threshold file paths for the vendor type
+    ///
+    /// # Arguments
+    ///
+    /// * `vendor` - Laptop vendor type
+    ///
+    /// # Returns
+    ///
+    /// ThresholdFiles with start and stop paths for the vendor
     fn get_threshold_files(vendor: &VendorType) -> ThresholdFiles {
         let battery_base = "/sys/class/power_supply";
 

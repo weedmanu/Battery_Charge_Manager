@@ -1,11 +1,24 @@
+//! Reusable UI components and widget helpers
+//!
+//! Provides info cards, labels, grids, and updatable widget structure
+//! for consistent UI styling across tabs.
+
 use gtk4::prelude::*;
 use gtk4::{Box, Frame, Grid, Label, Orientation};
 
-/// Composants réutilisables pour l'interface
+/// Reusable UI component builder
 pub struct InfoCard;
 
 impl InfoCard {
-    /// Crée une carte d'information avec titre et contenu
+    /// Creates a framed information card with title
+    ///
+    /// # Arguments
+    ///
+    /// * `title` - Card title text (accepts markup)
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (Frame, content Box) for adding widgets
     pub fn create(title: &str) -> (Frame, Box) {
         let frame = Frame::new(None);
 
@@ -33,14 +46,24 @@ impl InfoCard {
     }
 }
 
-/// Crée le label d'information aligné à gauche
+/// Creates left-aligned information label
+///
+/// # Arguments
+///
+/// * `text` - Label text content
+///
+/// # Returns
+///
+/// Configured Label widget
 pub fn create_info_label(text: &str) -> Label {
     let label = Label::new(Some(text));
     label.set_halign(gtk4::Align::Start);
     label
 }
 
-/// Structure pour maintenir les références aux widgets mis à jour
+/// Container for widget references requiring periodic updates
+///
+/// Stores Label references for battery metrics updated by timer
 pub struct UpdatableWidgets {
     pub power_source_value: Label,
     pub status_value: Label,
@@ -56,7 +79,11 @@ pub struct UpdatableWidgets {
     pub service_label: Label,
 }
 
-/// Crée une grille de ligne avec colonnes homogènes
+/// Creates a grid with homogeneous columns
+///
+/// # Returns
+///
+/// Configured Grid widget
 pub fn create_row_grid() -> Grid {
     let grid = Grid::new();
     grid.set_column_spacing(8);
@@ -64,14 +91,26 @@ pub fn create_row_grid() -> Grid {
     grid.set_row_homogeneous(true);
     grid
 }
-/// Crée un spacer vertical expansible
+/// Creates vertical expanding spacer
+///
+/// # Returns
+///
+/// Box configured to expand vertically
 pub fn create_vertical_spacer() -> Box {
     let spacer = Box::new(Orientation::Vertical, 0);
     spacer.set_vexpand(true);
     spacer
 }
 
-/// Crée une Box verticale avec marges standards
+/// Creates vertical box with standard margins
+///
+/// # Arguments
+///
+/// * `spacing` - Vertical spacing between children
+///
+/// # Returns
+///
+/// Configured Box widget
 pub fn create_content_box(spacing: i32) -> Box {
     let content_box = Box::new(Orientation::Vertical, spacing);
     content_box.set_margin_top(10);

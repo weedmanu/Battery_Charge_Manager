@@ -1,13 +1,28 @@
+//! Information tab displaying battery metrics and status
+//!
+//! Shows charge thresholds, current status, voltage, power consumption,
+//! capacity, health, and systemd service status with auto-refresh.
+
 use gtk4::prelude::*;
 use gtk4::{Box, Label, Orientation};
 
+use crate::core::i18n::t;
 use crate::core::{BatteryInfo, PowerSupplyInfo};
 use crate::ui::components::{
     create_content_box, create_info_label, create_row_grid, create_vertical_spacer, InfoCard,
     UpdatableWidgets,
 };
 
-/// Construit l'onglet Informations
+/// Builds the Information tab content
+///
+/// # Arguments
+///
+/// * `info` - Battery information
+/// * `power_supply` - AC power supply information
+///
+/// # Returns
+///
+/// Tuple of (tab Box, UpdatableWidgets) for timer updates
 pub fn build_info_tab(
     info: &BatteryInfo,
     power_supply: &PowerSupplyInfo,
@@ -18,7 +33,8 @@ pub fn build_info_tab(
     let row1 = create_row_grid();
 
     // Card Seuils
-    let (thresholds_frame, thresholds_box) = InfoCard::create("🎚️ Seuils");
+    let (thresholds_frame, thresholds_box) =
+        InfoCard::create(&format!("🎚️ {}", t("card_thresholds")));
 
     // Grille horizontale pour les seuils
     let thresholds_grid = gtk4::Grid::new();
@@ -32,7 +48,7 @@ pub fn build_info_tab(
     let threshold_start_label = if let Some(threshold) = info.charge_start_threshold {
         let col_box = Box::new(Orientation::Vertical, 4);
 
-        let title = Label::new(Some("Début de charge"));
+        let title = Label::new(Some(&t("threshold_start")));
         title.set_halign(gtk4::Align::Center);
         col_box.append(&title);
 
@@ -54,7 +70,7 @@ pub fn build_info_tab(
     // Seuil de fin
     let stop_col_box = Box::new(Orientation::Vertical, 4);
 
-    let stop_title = Label::new(Some("Fin de charge"));
+    let stop_title = Label::new(Some(&t("threshold_stop")));
     stop_title.set_halign(gtk4::Align::Center);
     stop_col_box.append(&stop_title);
 
@@ -75,7 +91,7 @@ pub fn build_info_tab(
     let alarm_label = if let Some(alarm_pct) = info.alarm_percent() {
         let alarm_col_box = Box::new(Orientation::Vertical, 4);
 
-        let alarm_title = Label::new(Some("Alarme"));
+        let alarm_title = Label::new(Some(&t("alarm")));
         alarm_title.set_halign(gtk4::Align::Center);
         alarm_col_box.append(&alarm_title);
 
@@ -106,7 +122,7 @@ pub fn build_info_tab(
     row1.attach(&thresholds_frame, 0, 0, 1, 1);
 
     // Card Charge
-    let (charge_frame, charge_box) = InfoCard::create("🔋 Charge");
+    let (charge_frame, charge_box) = InfoCard::create(&format!("🔋 {}", t("card_charge")));
     charge_box.append(&create_info_label(""));
 
     let capacity_label = Label::new(None);
@@ -130,7 +146,7 @@ pub fn build_info_tab(
     row1.attach(&charge_frame, 1, 0, 1, 1);
 
     // Card Santé
-    let (health_frame, health_box) = InfoCard::create("❤️ Santé");
+    let (health_frame, health_box) = InfoCard::create(&format!("❤️ {}", t("card_health")));
     health_box.append(&create_info_label(""));
 
     let health_label = Label::new(None);
@@ -153,10 +169,15 @@ pub fn build_info_tab(
 
     health_box.append(&create_info_label(""));
     health_box.append(&create_info_label(&format!(
-        "Usure: {:.1}%",
+        "{}: {:.1}%",
+        t("wear"),
         info.wear_percent
     )));
-    health_box.append(&create_info_label(&format!("Cycles: {}", info.cycle_count)));
+    health_box.append(&create_info_label(&format!(
+        "{}: {}",
+        t("cycles"),
+        info.cycle_count
+    )));
     row1.attach(&health_frame, 2, 0, 1, 1);
 
     content_box.append(&row1);
@@ -165,7 +186,7 @@ pub fn build_info_tab(
     let row2 = create_row_grid();
 
     // Card Alimentation
-    let (power_frame, power_box) = InfoCard::create("🔌 Alimentation");
+    let (power_frame, power_box) = InfoCard::create(&format!("🔌 {}", t("card_power")));
     power_box.append(&create_info_label(""));
 
     let power_source_value = Label::new(None);
@@ -179,13 +200,14 @@ pub fn build_info_tab(
     power_box.append(&create_info_label(""));
     power_box.append(&create_info_label(""));
     power_box.append(&create_info_label(&format!(
-        "Adaptateur: {}",
+        "{}: {}",
+        t("adapter"),
         power_supply.ac_name
     )));
     row2.attach(&power_frame, 0, 0, 1, 1);
 
     // Card État
-    let (status_frame, status_box) = InfoCard::create("📊 État");
+    let (status_frame, status_box) = InfoCard::create(&format!("📊 {}", t("card_status")));
     status_box.append(&create_info_label(""));
 
     let status_value = Label::new(None);
@@ -205,7 +227,7 @@ pub fn build_info_tab(
     row2.attach(&status_frame, 1, 0, 1, 1);
 
     // Card Batterie
-    let (battery_frame, battery_box) = InfoCard::create("🔋 Batterie");
+    let (battery_frame, battery_box) = InfoCard::create(&format!("🔋 {}", t("card_battery")));
     battery_box.append(&create_info_label(""));
 
     let battery_main = Label::new(None);
@@ -219,9 +241,17 @@ pub fn build_info_tab(
     // Espaceur pour pousser les infos secondaires vers le bas
     battery_box.append(&create_vertical_spacer());
 
-    battery_box.append(&create_info_label(&format!("Nom: {}", info.name)));
-    battery_box.append(&create_info_label(&format!("Modèle: {}", info.model_name)));
-    battery_box.append(&create_info_label(&format!("Type: {}", info.technology)));
+    battery_box.append(&create_info_label(&format!("{}: {}", t("name"), info.name)));
+    battery_box.append(&create_info_label(&format!(
+        "{}: {}",
+        t("model"),
+        info.model_name
+    )));
+    battery_box.append(&create_info_label(&format!(
+        "{}: {}",
+        t("type"),
+        info.technology
+    )));
     row2.attach(&battery_frame, 2, 0, 1, 1);
 
     content_box.append(&row2);
@@ -230,7 +260,8 @@ pub fn build_info_tab(
     let row3 = create_row_grid();
 
     // Card Électrique
-    let (electrical_frame, electrical_box) = InfoCard::create("⚡ Électrique");
+    let (electrical_frame, electrical_box) =
+        InfoCard::create(&format!("⚡ {}", t("card_electrical")));
     electrical_box.append(&create_info_label(""));
 
     let power_main = Label::new(None);
@@ -244,16 +275,16 @@ pub fn build_info_tab(
     // Espaceur pour pousser les infos secondaires vers le bas
     electrical_box.append(&create_vertical_spacer());
 
-    let voltage_value = create_info_label(&format!("Tension: {:.2} V", info.voltage_v()));
+    let voltage_value = create_info_label(&format!("{}: {:.2} V", t("voltage"), info.voltage_v()));
     electrical_box.append(&voltage_value);
-    let current_value = create_info_label(&format!("Courant: {} mA", info.current_ma()));
+    let current_value = create_info_label(&format!("{}: {} mA", t("current"), info.current_ma()));
     electrical_box.append(&current_value);
-    let power_value = create_info_label(&format!("Puissance: {:.2} W", info.power_watts()));
+    let power_value = create_info_label(&format!("{}: {:.2} W", t("power"), info.power_watts()));
     electrical_box.append(&power_value);
     row3.attach(&electrical_frame, 0, 0, 1, 1);
 
     // Card Capacité
-    let (capacity_frame, capacity_box) = InfoCard::create("⚡ Capacité");
+    let (capacity_frame, capacity_box) = InfoCard::create(&format!("⚡ {}", t("card_capacity")));
     capacity_box.append(&create_info_label(""));
 
     let capacity_main = Label::new(None);
@@ -280,7 +311,7 @@ pub fn build_info_tab(
     row3.attach(&capacity_frame, 1, 0, 1, 1);
 
     // Card Service
-    let (service_frame, service_box) = InfoCard::create("🔄 Service");
+    let (service_frame, service_box) = InfoCard::create(&format!("🔄 {}", t("card_service")));
     service_box.append(&create_info_label(""));
 
     let service_label = Label::new(None);

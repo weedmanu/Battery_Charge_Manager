@@ -1,29 +1,31 @@
-//! Traits pour l'abstraction des services et injection de dépendances
+//! Trait abstractions for dependency injection and testing
+//!
+//! Provides `BatteryService` and `ThresholdWriter` traits to abstract
+//! battery operations, enabling mock implementations for unit tests.
 
 use super::battery::{BatteryError, BatteryInfo};
 
-/// Service de gestion des batteries
+/// Battery information service trait
 ///
-/// Permet d'abstraire la source des informations de batterie
-/// pour faciliter les tests avec des mocks.
+/// Abstracts battery data source for easier testing with mocks
 #[allow(dead_code)]
 pub trait BatteryService {
-    /// Récupère les informations d'une batterie spécifique
+    /// Retrieves information for a specific battery
     ///
     /// # Arguments
     ///
-    /// * `name` - Le nom de la batterie (ex: "BAT0", "BAT1")
+    /// * `name` - Battery name (e.g., "BAT0", "BAT1")
     ///
-    /// # Erreurs
+    /// # Errors
     ///
-    /// Retourne `BatteryError` si le nom est invalide ou si la lecture échoue
+    /// Returns `BatteryError` if name is invalid or read fails
     fn get_info(&self, name: &str) -> Result<BatteryInfo, BatteryError>;
 
-    /// Liste toutes les batteries disponibles sur le système
+    /// Lists all available batteries on the system
     fn list_batteries(&self) -> Vec<String>;
 }
 
-/// Implémentation réelle du service de batterie
+/// Real battery service implementation
 #[allow(dead_code)]
 pub struct SystemBatteryService;
 
@@ -37,36 +39,36 @@ impl BatteryService for SystemBatteryService {
     }
 }
 
-/// Service d'écriture des seuils de charge
+/// Charge threshold writer service trait
 ///
-/// Abstrait l'écriture des seuils pour permettre les tests
+/// Abstracts threshold writing for testing purposes
 #[allow(dead_code)]
 pub trait ThresholdWriter {
-    /// Applique des seuils de charge à une batterie
+    /// Applies charge thresholds to a battery
     ///
     /// # Arguments
     ///
-    /// * `battery` - Le nom de la batterie
-    /// * `start` - Seuil de démarrage (0-100)
-    /// * `stop` - Seuil d'arrêt (0-100)
+    /// * `battery` - Battery name
+    /// * `start` - Start threshold (0-100), if supported
+    /// * `stop` - Stop threshold (0-100)
     ///
-    /// # Erreurs
+    /// # Errors
     ///
-    /// Retourne une erreur si l'application échoue
+    /// Returns error if application fails
     fn apply_thresholds(&self, battery: &str, start: Option<u8>, stop: u8) -> Result<(), String>;
 
-    /// Vérifie si les seuils de démarrage sont supportés
+    /// Checks if start threshold is supported
     fn supports_start_threshold(&self) -> bool;
 }
 
-/// Implémentation système du writer de seuils
+/// System threshold writer implementation
 #[allow(dead_code)]
 pub struct SystemThresholdWriter {
     supports_start: bool,
 }
 
 impl SystemThresholdWriter {
-    /// Crée un nouveau writer système
+    /// Creates a new system threshold writer
     #[allow(dead_code)]
     pub fn new(supports_start: bool) -> Self {
         Self { supports_start }

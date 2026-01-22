@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/battery-manager-restore
+ExecStart=/usr/bin/battery-manager-restore
 RemainAfterExit=yes
 
 [Install]

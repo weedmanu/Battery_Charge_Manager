@@ -1,15 +1,22 @@
+//! Battery information module
+//!
+//! Provides battery status, capacity, health, and threshold information
+//! by reading from `/sys/class/power_supply/` sysfs interface.
+
 use std::fs;
 
-/// Constantes pour les formats markup
+/// Markup format constants for colored text display
 const MARKUP_LARGE_GREEN: &str = "<span size='xx-large' weight='bold' color='green'>{}</span>";
 const MARKUP_LARGE_BLUE: &str = "<span size='xx-large' weight='bold' color='blue'>{}</span>";
 const MARKUP_LARGE_ORANGE: &str = "<span size='xx-large' weight='bold' color='orange'>{}</span>";
 const MARKUP_LARGE_RED: &str = "<span size='xx-large' weight='bold' color='red'>{}</span>";
 
-/// Erreurs possibles lors de la création de BatteryInfo
+/// Errors that can occur when creating a `BatteryInfo` instance
 #[derive(Debug)]
 pub enum BatteryError {
+    /// Invalid battery name (must start with "BAT")
     InvalidBatteryName(String),
+    /// I/O error when reading sysfs files
     IoError(std::io::Error),
 }
 
@@ -36,7 +43,10 @@ impl From<std::io::Error> for BatteryError {
     }
 }
 
-/// Informations détaillées sur une batterie
+/// Detailed battery information
+///
+/// Contains all battery metrics including status, capacity, health,
+/// electrical parameters, and charge thresholds.
 #[derive(Debug, Clone)]
 pub struct BatteryInfo {
     pub name: String,
@@ -62,11 +72,20 @@ pub struct BatteryInfo {
 }
 
 impl BatteryInfo {
-    /// Crée une nouvelle instance `BatteryInfo` en lisant les fichiers système.
+    /// Creates a new `BatteryInfo` instance by reading sysfs files
     ///
-    /// # Erreurs
+    /// # Arguments
     ///
-    /// Retourne `BatteryError::InvalidBatteryName` si le nom ne commence pas par "BAT".
+    /// * `battery_name` - Battery name (must start with "BAT", e.g., "BAT0", "BAT1")
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(BatteryInfo)` - Successfully read battery information
+    /// * `Err(BatteryError)` - Invalid battery name or I/O error
+    ///
+    /// # Errors
+    ///
+    /// Returns `BatteryError::InvalidBatteryName` if name doesn't start with "BAT"
     pub fn new(battery_name: &str) -> Result<Self, BatteryError> {
         // Validation du nom de batterie
         if !battery_name.starts_with("BAT") {
@@ -183,12 +202,27 @@ impl BatteryInfo {
         })
     }
 
-    /// Lit un fichier système et retourne son contenu trimé
+    /// Reads a sysfs file and returns its trimmed content
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the sysfs file
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - File content (trimmed)
+    /// * `None` - File doesn't exist or read error
     fn read_sys_file(path: &str) -> Option<String> {
         fs::read_to_string(path).ok().map(|s| s.trim().to_string())
     }
 
-    /// Retourne la liste des batteries disponibles
+    /// Returns the list of available batteries
+    ///
+    /// Scans `/sys/class/power_supply/` for devices starting with "BAT"
+    ///
+    /// # Returns
+    ///
+    /// Sorted vector of battery names (e.g., ["BAT0", "BAT1"])
     pub fn get_battery_list() -> Vec<String> {
         let mut batteries = Vec::new();
         if let Ok(entries) = fs::read_dir("/sys/class/power_supply") {
@@ -203,7 +237,11 @@ impl BatteryInfo {
         batteries
     }
 
-    /// Retourne le texte d'état formaté pour l'affichage
+    /// Returns formatted status text with markup for display
+    ///
+    /// # Returns
+    ///
+    /// Pango markup string with color and icon for battery status
     pub fn get_status_markup(&self) -> String {
         match self.status.as_str() {
             "Charging" => MARKUP_LARGE_GREEN.replace("{}", "⚡ En charge"),
@@ -214,37 +252,66 @@ impl BatteryInfo {
         }
     }
 
-    /// Calcule la puissance en watts
+    /// Calculates power consumption in watts
+    ///
+    /// # Returns
+    ///
+    /// Power in watts (voltage × current)
     pub fn power_watts(&self) -> f64 {
         (self.voltage_now as f64 / 1_000_000.0) * (self.current_now as f64 / 1_000_000.0)
     }
 
-    /// Retourne la tension en volts
+    /// Returns voltage in volts
+    ///
+    /// # Returns
+    ///
+    /// Voltage in V (converted from µV)
     pub fn voltage_v(&self) -> f64 {
         self.voltage_now as f64 / 1_000_000.0
     }
 
-    /// Retourne le courant en mA
+    /// Returns current in milliamperes
+    ///
+    /// # Returns
+    ///
+    /// Current in mA (converted from µA)
     pub fn current_ma(&self) -> u64 {
         self.current_now / 1000
     }
 
-    /// Retourne la charge actuelle en mAh
+    /// Returns current charge in milliampere-hours
+    ///
+    /// # Returns
+    ///
+    /// Charge in mAh (converted from µAh)
     pub fn charge_now_mah(&self) -> u64 {
         self.charge_now / 1000
     }
 
-    /// Retourne la capacité max en mAh
+    /// Returns full charge capacity in milliampere-hours
+    ///
+    /// # Returns
+    ///
+    /// Full capacity in mAh (converted from µAh)
     pub fn charge_full_mah(&self) -> u64 {
         self.charge_full / 1000
     }
 
-    /// Retourne la capacité d'origine en mAh
+    /// Returns design capacity in milliampere-hours
+    ///
+    /// # Returns
+    ///
+    /// Original design capacity in mAh (converted from µAh)
     pub fn charge_full_design_mah(&self) -> u64 {
         self.charge_full_design / 1000
     }
 
-    /// Retourne le temps restant formaté
+    /// Returns formatted remaining time string
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - Time formatted as "Xh00 until full" or "Xh00 remaining"
+    /// * `None` - Time cannot be calculated
     pub fn time_remaining_formatted(&self) -> Option<String> {
         self.time_remaining_minutes.map(|minutes| {
             let hours = minutes / 60;
@@ -257,13 +324,22 @@ impl BatteryInfo {
         })
     }
 
-    /// Retourne le pourcentage d'alarme par rapport à la capacité max
+    /// Returns alarm threshold as percentage of full capacity
+    ///
+    /// # Returns
+    ///
+    /// * `Some(f32)` - Alarm percentage
+    /// * `None` - No alarm configured
     pub fn alarm_percent(&self) -> Option<f32> {
         self.alarm
             .map(|a| (a as f32 / self.charge_full as f32) * 100.0)
     }
 
-    /// Retourne l'état du service systemd formaté
+    /// Returns formatted systemd service status with markup
+    ///
+    /// # Returns
+    ///
+    /// Pango markup string (green "Active" or red "Inactive")
     pub fn service_status_markup(&self) -> String {
         if self.service_active {
             MARKUP_LARGE_GREEN.replace("{}", "Actif")

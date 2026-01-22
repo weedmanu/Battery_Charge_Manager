@@ -1,6 +1,10 @@
+//! Power supply detection module
+//!
+//! Provides AC power (mains) detection and status information.
+
 use std::fs;
 
-/// Informations sur l'alimentation secteur
+/// AC power supply information
 #[derive(Debug, Clone)]
 pub struct PowerSupplyInfo {
     pub ac_online: bool,
@@ -8,7 +12,13 @@ pub struct PowerSupplyInfo {
 }
 
 impl PowerSupplyInfo {
-    /// Crée une nouvelle instance en détectant l'alimentation secteur
+    /// Creates a new instance by detecting AC power status
+    ///
+    /// Scans `/sys/class/power_supply/` for "Mains" type devices
+    ///
+    /// # Returns
+    ///
+    /// PowerSupplyInfo with AC status and device name
     pub fn new() -> Self {
         let mut ac_online = false;
         let mut ac_name = String::from("Non détecté");
@@ -33,7 +43,11 @@ impl PowerSupplyInfo {
         Self { ac_online, ac_name }
     }
 
-    /// Retourne le markup pour l'état de l'alimentation
+    /// Returns markup string for power source display
+    ///
+    /// # Returns
+    ///
+    /// Pango markup with green "🔌 Secteur" or orange "🔋 Batterie"
     pub fn get_power_source_markup(&self) -> &'static str {
         if self.ac_online {
             "<span size='xx-large' weight='bold' color='green'>🔌 Secteur</span>"
