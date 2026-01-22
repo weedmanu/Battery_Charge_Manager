@@ -26,8 +26,6 @@ systemctl stop battery-manager.service 2>/dev/null || true
 echo "Suppression des fichiers..."
 rm -f /usr/bin/battery-manager
 rm -f /usr/bin/battery-manager-restore
-rm -f /usr/share/applications/battery-manager.desktop
-rm -f /usr/share/pixmaps/battery-manager.png
 rm -f /lib/systemd/system/battery-manager.service
 
 # Recharger systemd
@@ -37,3 +35,5 @@ systemctl daemon-reload
 echo -e "\n${GREEN}✓ Désinstallation terminée avec succès!${NC}"
 echo -e "\n${YELLOW}Note: Les fichiers de configuration dans /etc/battery-manager/ ont été conservés${NC}"
 echo -e "Pour les supprimer également: sudo rm -rf /etc/battery-manager/"
+echo -e "\n${YELLOW}Note: Ce script désinstalle uniquement le service systemd${NC}"
+echo -e "Pour une désinstallation complète du package .deb: sudo apt remove battery-manager"
