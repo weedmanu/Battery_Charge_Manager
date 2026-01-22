@@ -324,8 +324,7 @@ impl BatteryInfo {
     pub fn get_status_css_class(&self) -> &str {
         match self.status.as_str() {
             "Charging" => "color-success",
-            "Full" => "color-primary",
-            "Not charging" => "color-primary",
+            "Full" | "Not charging" => "color-primary",
             _ => "color-warning",
         }
     }

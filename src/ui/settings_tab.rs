@@ -12,6 +12,16 @@ use crate::core::i18n::t;
 use crate::core::{BatteryInfo, VendorInfo};
 use crate::ui::components::InfoCard;
 
+fn service_unit_exists() -> bool {
+    [
+        "/etc/systemd/system/battery-manager.service",
+        "/usr/lib/systemd/system/battery-manager.service",
+        "/lib/systemd/system/battery-manager.service",
+    ]
+    .into_iter()
+    .any(|p| Path::new(p).is_file())
+}
+
 /// Creates vendor information card
 fn create_vendor_card(vendor_info: &VendorInfo) -> gtk4::Frame {
     let (vendor_frame, vendor_box) = InfoCard::create(&format!("🏭 {}", t("card_system_info")));
@@ -92,16 +102,6 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
         "⚙️ [SETTINGS_TAB] Building settings tab for {current_battery}..."
     ));
 
-    fn service_unit_exists() -> bool {
-        [
-            "/etc/systemd/system/battery-manager.service",
-            "/usr/lib/systemd/system/battery-manager.service",
-            "/lib/systemd/system/battery-manager.service",
-        ]
-        .into_iter()
-        .any(|p| Path::new(p).is_file())
-    }
-
     let unit_exists = service_unit_exists();
     crate::core::debug::debug_log_args(std::format_args!(
         "🧩 [SETTINGS_TAB] Service unit present: {unit_exists} (service_active={})",
@@ -147,7 +147,7 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     let alarm_value = battery_info.alarm_percent().unwrap_or(10.0);
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let (alarm_row, alarm_spin) =
-        create_threshold_row("Alarme de décharge (%)", alarm_value as u8, 1.0, 100.0);
+        create_threshold_row(&t("alarm_threshold"), alarm_value as u8, 1.0, 100.0);
     // Override decimal places for alarm
     alarm_spin.set_digits(1);
     settings_box.append(&alarm_row);
@@ -504,9 +504,7 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
                             status_message.remove_css_class("color-warning");
                             status_message.add_css_class("color-danger");
                             crate::core::debug::debug_log_args(std::format_args!(
-                                "❌ [SETTINGS_TAB] Script execution failed: code={code:?} stdout='{}' stderr='{}'",
-                                stdout_preview,
-                                stderr_preview
+                                "❌ [SETTINGS_TAB] Script execution failed: code={code:?} stdout='{stdout_preview}' stderr='{stderr_preview}'"
                             ));
                         }
                         Err(err) => {

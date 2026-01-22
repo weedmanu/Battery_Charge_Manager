@@ -50,14 +50,13 @@ fn color_mode() -> ColorMode {
         return ColorMode::Always;
     }
 
-    match std::env::var("BATTERY_MANAGER_COLOR") {
-        Ok(v) => match v.to_ascii_lowercase().as_str() {
+    std::env::var("BATTERY_MANAGER_COLOR").map_or(ColorMode::Auto, |v| {
+        match v.to_ascii_lowercase().as_str() {
             "1" | "true" | "yes" | "always" => ColorMode::Always,
             "0" | "false" | "no" | "never" => ColorMode::Never,
             _ => ColorMode::Auto,
-        },
-        Err(_) => ColorMode::Auto,
-    }
+        }
+    })
 }
 
 fn should_colorize_stderr() -> bool {
@@ -257,7 +256,7 @@ mod tests {
                 };
 
                 let rest = &line[pos + "debug_log(\"".len()..];
-                let Some(end) = rest.find("\"") else {
+                let Some(end) = rest.find('"') else {
                     continue;
                 };
 

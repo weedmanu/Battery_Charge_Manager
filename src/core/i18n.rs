@@ -72,7 +72,6 @@ static TRANSLATIONS: std::sync::LazyLock<
         "enable_service",
         "Activer la restauration automatique au démarrage",
     );
-    fr.insert("apply_all", "Appliquer tous les réglages");
     fr.insert("charge_100", "Charger à 100%");
     fr.insert(
         "settings_applied",
@@ -240,7 +239,6 @@ static TRANSLATIONS: std::sync::LazyLock<
     en.insert("alarm_threshold", "Alarm threshold (%)");
     en.insert("service_settings", "🔧 Systemd Service");
     en.insert("enable_service", "Enable automatic restoration at boot");
-    en.insert("apply_all", "Apply all settings");
     en.insert("charge_100", "Charge to 100%");
     en.insert("settings_applied", "✓ Settings applied (reboot required)");
     en.insert("alarm", "Alarm");

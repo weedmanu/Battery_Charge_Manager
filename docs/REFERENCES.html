@@ -80,6 +80,7 @@
 <li><a href="#5-developpement-gtk4-linux">5) Développement GTK4 (Linux)</a><ul>
 <li><a href="#dependances-debianubuntu">Dépendances Debian/Ubuntu</a></li>
 <li><a href="#debug-gtk">Debug GTK</a></li>
+<li><a href="#logs-battery-manager-couleurs-optionnel">Logs Battery Manager : couleurs (optionnel)</a></li>
 </ul>
 </li>
 <li><a href="#6-outils-systeme-utiles-projet">6) Outils système utiles (projet)</a><ul>
@@ -129,6 +130,7 @@
 <li><a href="#5-gtk4-development-linux">5) GTK4 development (Linux)</a><ul>
 <li><a href="#debianubuntu-dependencies">Debian/Ubuntu dependencies</a></li>
 <li><a href="#gtk-debugging">GTK debugging</a></li>
+<li><a href="#battery-manager-logs-colors-optional">Battery Manager logs: colors (optional)</a></li>
 </ul>
 </li>
 <li><a href="#6-useful-system-tools-project">6) Useful system tools (project)</a><ul>
@@ -242,6 +244,14 @@ sudo apt install libgtk-4-dev build-essential policykit-1
 </code></pre>
 <h3 id="debug-gtk">Debug GTK<a class="headerlink" href="#debug-gtk" title="Permanent link">&para;</a></h3>
 <pre><code class="language-bash">G_MESSAGES_DEBUG=all battery-manager --debug
+</code></pre>
+<h3 id="logs-battery-manager-couleurs-optionnel">Logs Battery Manager : couleurs (optionnel)<a class="headerlink" href="#logs-battery-manager-couleurs-optionnel" title="Permanent link">&para;</a></h3>
+<p>Par défaut, la coloration suit le terminal (auto).</p>
+<pre><code class="language-bash"># Forcer les couleurs (même si stdout n'est pas un TTY)
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+
+# Désactiver toutes les couleurs (standard)
+NO_COLOR=1 battery-manager --debug
 </code></pre>
 <h2 id="6-outils-systeme-utiles-projet">6) Outils système utiles (projet)<a class="headerlink" href="#6-outils-systeme-utiles-projet" title="Permanent link">&para;</a></h2>
 <h3 id="arborescence">Arborescence<a class="headerlink" href="#arborescence" title="Permanent link">&para;</a></h3>
@@ -391,6 +401,14 @@ sudo apt install libgtk-4-dev build-essential policykit-1
 </code></pre>
 <h3 id="gtk-debugging">GTK debugging<a class="headerlink" href="#gtk-debugging" title="Permanent link">&para;</a></h3>
 <pre><code class="language-bash">G_MESSAGES_DEBUG=all battery-manager --debug
+</code></pre>
+<h3 id="battery-manager-logs-colors-optional">Battery Manager logs: colors (optional)<a class="headerlink" href="#battery-manager-logs-colors-optional" title="Permanent link">&para;</a></h3>
+<p>By default, color output follows the terminal (auto).</p>
+<pre><code class="language-bash"># Force colors (even if stdout isn't a TTY)
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+
+# Disable all colors (standard)
+NO_COLOR=1 battery-manager --debug
 </code></pre>
 <h2 id="6-useful-system-tools-project">6) Useful system tools (project)<a class="headerlink" href="#6-useful-system-tools-project" title="Permanent link">&para;</a></h2>
 <h3 id="directory-tree">Directory tree<a class="headerlink" href="#directory-tree" title="Permanent link">&para;</a></h3>

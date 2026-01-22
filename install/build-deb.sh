@@ -236,12 +236,6 @@ License: MIT
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 EOF
 
-# Copier le README si disponible
-if [ -f "../README.md" ]; then
-    cp ../README.md "${DEB_DIR}/usr/share/doc/${APP_NAME}/README.md"
-    gzip -9 -n "${DEB_DIR}/usr/share/doc/${APP_NAME}/README.md"
-fi
-
 # Créer le changelog
 cat > "${DEB_DIR}/usr/share/doc/${APP_NAME}/changelog.Debian" << EOF
 ${APP_NAME} (${VERSION}) unstable; urgency=medium

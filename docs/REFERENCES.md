@@ -155,6 +155,18 @@ sudo apt install libgtk-4-dev build-essential policykit-1
 G_MESSAGES_DEBUG=all battery-manager --debug
 ```
 
+### Logs Battery Manager : couleurs (optionnel)
+
+Par défaut, la coloration suit le terminal (auto).
+
+```bash
+# Forcer les couleurs (même si stdout n'est pas un TTY)
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+
+# Désactiver toutes les couleurs (standard)
+NO_COLOR=1 battery-manager --debug
+```
+
 ## 6) Outils système utiles (projet)
 
 ### Arborescence
@@ -392,6 +404,18 @@ sudo apt install libgtk-4-dev build-essential policykit-1
 
 ```bash
 G_MESSAGES_DEBUG=all battery-manager --debug
+```
+
+### Battery Manager logs: colors (optional)
+
+By default, color output follows the terminal (auto).
+
+```bash
+# Force colors (even if stdout isn't a TTY)
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+
+# Disable all colors (standard)
+NO_COLOR=1 battery-manager --debug
 ```
 
 ## 6) Useful system tools (project)

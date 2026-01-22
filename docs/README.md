@@ -9,9 +9,9 @@
 [![Rust](https://img.shields.io/badge/Rust-1.92.0-orange.svg)](https://www.rust-lang.org/)
 [![GTK4](https://img.shields.io/badge/GTK-4.0-blue.svg)](https://gtk.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-39%2F39_passing-success.svg)](#tests)
+[![Tests](https://img.shields.io/badge/Tests-40%2F40_passing-success.svg)](#tests)
 [![Quality](https://img.shields.io/badge/Clippy-0_warnings-success.svg)](#qualit%C3%A9-aaa)
-[![Code](https://img.shields.io/badge/Lines-2728_Rust-blueviolet.svg)](#structure-du-projet)
+[![Code](https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg)](#structure-du-projet)
 
 ---
 
@@ -21,7 +21,7 @@
 
 - **Visualisation en temps réel** : charge, santé, voltage, puissance, cycles
 - **Configuration des seuils** : début et fin de charge (0-100%)
-- **Sauvegarde persistante** : restauration automatique au démarrage via systemd
+- **Persistance optionnelle** : restauration au démarrage via systemd (si activé)
 - **Support multi-fabricants** : ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo
 
 ### 🌍 Internationalisation
@@ -42,7 +42,7 @@
 ### 🏗️ Architecture
 
 - **SOLID** : séparation stricte core/ (logique) et ui/ (présentation)
-- **39 tests unitaires** : 100% de réussite
+- **40 tests unitaires** : 100% de réussite
 - **Documentation complète** : docstrings Rust standard
 - **Qualité AAA** : 0 warning Clippy (pedantic + nursery)
 
@@ -109,6 +109,10 @@ battery-manager --lang=fr      # Force le français
 battery-manager --lang=en      # Force l'anglais
 battery-manager --debug        # Active les logs de debug
 battery-manager --help         # Affiche l'aide complète
+
+# Forcer/désactiver les couleurs des logs (optionnel)
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+NO_COLOR=1 battery-manager --debug
 ```
 
 ### Interface
@@ -120,7 +124,7 @@ L'interface comporte **4 onglets** :
 - **⚙️ Réglages** : curseurs pour les seuils de charge, alarme, activation service systemd
 - **🎨 Interface** : choix de la langue (FR/EN) et du thème (clair/sombre)
 
-Les seuils sont appliqués **immédiatement** et sauvegardés pour la prochaine session.
+Les seuils sont appliqués **immédiatement**. Ils sont restaurés au prochain démarrage uniquement si le service systemd est activé ; sinon, ils seront perdus après redémarrage.
 
 ---
 
@@ -197,55 +201,48 @@ sudo ./uninstall.sh
 ## 📂 Structure du projet
 
 ```
-Battery_Manager/                        # 7 directories, 16 files
-├── Cargo.toml                          # Dépendances Rust (GTK4, serde)
-├── Cargo.lock                          # Versions verrouillées des dépendances
-├── LICENSE                             # Licence MIT
-├── README.md                           # Documentation principale (Markdown)
-├── README.html                         # Documentation (HTML)
-├── REFERENCES.md                       # Références et ressources (Markdown)
-├── REFERENCES.html                     # Références et ressources (HTML)
-├── docs/                               # Styles docs partagés
-│   └── style.css                       # CSS moderne (menu + thème + FR/EN)
-│
-├── install/                            # Scripts d'installation
-│   ├── build-deb.sh                    # Générateur de package .deb
-│   ├── install.sh                      # Installation manuelle (dev)
-│   └── uninstall.sh                    # Désinstallation manuelle
-│
-├── resources/                          # Fichiers système
-│   ├── battery-manager.desktop         # Lanceur menu applications
-│   ├── battery-manager.service         # Service systemd
-│   ├── battery-manager-restore.sh      # Script de restauration (appelé au boot)
-│   └── icon.png                        # Icône de l'application (8.4KB)
-│
-├── src/                                # Code source Rust (2728 lignes, 17 fichiers)
-│   ├── main.rs                         # Point d'entrée de l'application
-│   │
-│   ├── core/                           # Logique métier (indépendante de l'UI)
-│   │   ├── mod.rs                      # Exports du module core
-│   │   ├── battery.rs                  # Lecture infos batterie via sysfs
-│   │   ├── power_supply.rs             # Détection alimentation secteur (AC)
-│   │   ├── vendor_detection.rs         # Détection fabricant (ASUS, Lenovo, etc.)
-│   │   ├── traits.rs                   # Traits pour injection de dépendances
-│   │   ├── peripheral.rs               # Détection batteries périphériques
-│   │   ├── i18n.rs                     # Système de traduction FR/EN
-│   │   └── debug.rs                    # Macros de debug (debug!, debug_ui!)
-│   │
-│   └── ui/                             # Interface utilisateur GTK4
-│       ├── mod.rs                      # Exports du module ui
-│       ├── app.rs                      # Fenêtre principale et auto-refresh
-│       ├── components.rs               # Composants réutilisables
-│       ├── info_tab.rs                 # Onglet "Informations"
-│       ├── peripherals_tab.rs          # Onglet "Périphériques"
-│       ├── settings_tab.rs             # Onglet "Réglages"
-│       ├── ui_tab.rs                   # Onglet "Interface"
-│       └── theme.rs                    # Gestion des thèmes CSS
-│
-└── target/                             # Dossier de build Cargo (ignoré par git)
-    ├── debug/                          # Binaires de développement
-    └── release/                        # Binaires optimisés
-        └── battery_manager             # Exécutable final
+Battery_Manager/                        # 7 directories, 35 files
+├── Cargo.lock
+├── Cargo.toml
+├── docs
+│   ├── generate_docs.py
+│   ├── icon.png
+│   ├── README.html
+│   ├── README.md
+│   ├── REFERENCES.html
+│   ├── REFERENCES.md
+│   └── style.css
+├── install
+│   ├── build-deb.sh
+│   ├── install.sh
+│   └── uninstall.sh
+├── LICENSE
+├── README.md
+├── resources
+│   ├── battery-manager.desktop
+│   ├── battery-manager-restore.sh
+│   ├── battery-manager.service
+│   └── icon.png
+└── src                                 # Code source Rust (3473 lignes, 17 fichiers)
+    ├── core
+    │   ├── battery.rs
+    │   ├── debug.rs
+    │   ├── i18n.rs
+    │   ├── mod.rs
+    │   ├── peripheral.rs
+    │   ├── power_supply.rs
+    │   ├── traits.rs
+    │   └── vendor_detection.rs
+    ├── main.rs
+    └── ui
+        ├── app.rs
+        ├── components.rs
+        ├── info_tab.rs
+        ├── mod.rs
+        ├── peripherals_tab.rs
+        ├── settings_tab.rs
+        ├── theme.rs
+        └── ui_tab.rs
 ```
 
 ### Statistiques du code
@@ -253,7 +250,7 @@ Battery_Manager/                        # 7 directories, 16 files
 ```
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Rust                            17            453            578           2728
+Rust                            17            564            618           3473
 -------------------------------------------------------------------------------
 ```
 
@@ -333,14 +330,14 @@ Fonctionnera si votre ordinateur portable expose ces fichiers via sysfs.
 
 ## 🧪 Tests
 
-L'application dispose de **39 tests unitaires** avec **100% de réussite** :
+L'application dispose de **40 tests unitaires** avec **100% de réussite** :
 
 ```bash
 cargo test                    # Exécuter tous les tests
 cargo test --test-threads=1   # Exécuter en séquentiel (recommandé pour i18n)
 
 # Résultat attendu :
-# test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+# test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 ### Couverture des tests
@@ -384,13 +381,13 @@ cargo build --release         # Compiler en mode release
 
 ### Métriques de qualité
 
-| Métrique            | Valeur       | Status        |
-| ------------------- | ------------ | ------------- |
-| **Warnings Clippy** | 0 / 0        | ✅ 100%       |
-| **Tests unitaires** | 39 / 39      | ✅ 100%       |
-| **Documentation**   | 100%         | ✅ Complète   |
-| **Sécurité**        | 0 `unwrap()` | ✅ Hardened   |
-| **Architecture**    | SOLID        | ✅ Clean Code |
+| Métrique            | Valeur                      | Status        |
+| ------------------- | --------------------------- | ------------- |
+| **Warnings Clippy** | 0 / 0                       | ✅ 100%       |
+| **Tests unitaires** | 40 / 40                     | ✅ 100%       |
+| **Documentation**   | 100%                        | ✅ Complète   |
+| **Sécurité**        | `unwrap()` limité aux tests | ✅ Hardened   |
+| **Architecture**    | SOLID                       | ✅ Clean Code |
 
 ### Optimisations appliquées
 
@@ -452,9 +449,9 @@ Les contributions sont les bienvenues ! Pour contribuer :
 [![Rust](https://img.shields.io/badge/Rust-1.92.0-orange.svg)](https://www.rust-lang.org/)
 [![GTK4](https://img.shields.io/badge/GTK-4.0-blue.svg)](https://gtk.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-39%2F39_passing-success.svg)](#tests)
+[![Tests](https://img.shields.io/badge/Tests-40%2F40_passing-success.svg)](#tests)
 [![Quality](https://img.shields.io/badge/Clippy-0_warnings-success.svg)](#aaa-quality)
-[![Code](https://img.shields.io/badge/Lines-2728_Rust-blueviolet.svg)](#project-structure)
+[![Code](https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg)](#project-structure)
 
 ---
 
@@ -464,7 +461,7 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 - **Real-time view**: charge, health, voltage, power, cycles
 - **Threshold configuration**: start/stop charge (0-100%)
-- **Persistent restore**: automatically restored at boot via systemd
+- **Optional persistence**: restored at boot via systemd (if enabled)
 - **Multi-vendor support**: ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo
 
 ### 🌍 Internationalization
@@ -485,7 +482,7 @@ Les contributions sont les bienvenues ! Pour contribuer :
 ### 🏗️ Architecture
 
 - **SOLID**: strict separation between core/ (logic) and ui/ (presentation)
-- **39 unit tests**: 100% passing
+- **40 unit tests**: 100% passing
 - **Complete docs**: standard Rust docstrings
 - **AAA quality**: 0 Clippy warnings (pedantic + nursery)
 
@@ -544,6 +541,10 @@ battery-manager --lang=fr
 battery-manager --lang=en
 battery-manager --debug
 battery-manager --help
+
+# Optional: force/disable log colors
+BATTERY_MANAGER_COLOR=always battery-manager --debug
+NO_COLOR=1 battery-manager --debug
 ```
 
 ### UI
@@ -555,7 +556,7 @@ The UI has **4 tabs**:
 - **⚙️ Settings**: thresholds, alarm, systemd toggle
 - **🎨 Interface**: language + theme
 
-Thresholds are applied immediately and persisted.
+Thresholds are applied immediately. They are restored at the next boot only if the systemd service is enabled; otherwise, they will be lost after reboot.
 
 ---
 
@@ -717,7 +718,7 @@ cargo test --test-threads=1
 Expected:
 
 ```text
-test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 ---
