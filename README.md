@@ -1,5 +1,7 @@
 # Battery Manager
 
+[![CI](https://github.com/weedmanu/Battery_Charge_Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/weedmanu/Battery_Charge_Manager/actions/workflows/ci.yml)
+
 Un gestionnaire de batterie moderne pour Linux avec interface GTK4, permettant de contrôler les seuils de charge sans dépendance à TLP.
 
 ## Fonctionnalités
