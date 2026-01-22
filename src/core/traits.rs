@@ -8,7 +8,6 @@ use super::battery::{BatteryError, BatteryInfo};
 /// Battery information service trait
 ///
 /// Abstracts battery data source for easier testing with mocks
-#[allow(dead_code)]
 pub trait BatteryService {
     /// Retrieves information for a specific battery
     ///
@@ -26,7 +25,6 @@ pub trait BatteryService {
 }
 
 /// Real battery service implementation
-#[allow(dead_code)]
 pub struct SystemBatteryService;
 
 impl BatteryService for SystemBatteryService {
@@ -42,7 +40,6 @@ impl BatteryService for SystemBatteryService {
 /// Charge threshold writer service trait
 ///
 /// Abstracts threshold writing for testing purposes
-#[allow(dead_code)]
 pub trait ThresholdWriter {
     /// Applies charge thresholds to a battery
     ///
@@ -62,15 +59,13 @@ pub trait ThresholdWriter {
 }
 
 /// System threshold writer implementation
-#[allow(dead_code)]
 pub struct SystemThresholdWriter {
     supports_start: bool,
 }
 
 impl SystemThresholdWriter {
     /// Creates a new system threshold writer
-    #[allow(dead_code)]
-    pub fn new(supports_start: bool) -> Self {
+    pub const fn new(supports_start: bool) -> Self {
         Self { supports_start }
     }
 }
@@ -93,8 +88,8 @@ impl ThresholdWriter for SystemThresholdWriter {
             }
         }
 
-        // Note: L'écriture réelle est faite par pkexec dans settings_tab.rs
-        // Ce trait sert principalement pour les tests et l'abstraction
+        // Note: Actual writing is done by pkexec in settings_tab.rs
+        // This trait is mainly for tests and abstraction
         Ok(())
     }
 
@@ -123,7 +118,7 @@ mod tests {
             if !name.starts_with("BAT") {
                 return Err(BatteryError::InvalidBatteryName(name.to_string()));
             }
-            // Retourne une erreur IoError car le mock ne peut pas lire les vrais fichiers
+            // Returns IoError as mock service cannot read real files
             Err(BatteryError::IoError(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 "Mock service",

@@ -5,10 +5,11 @@ set -e
 
 # Variables
 APP_NAME="battery-manager"
-VERSION="1.0.0"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VERSION="$(awk -F'"' '/^version = / {print $2; exit}' "${PROJECT_ROOT}/Cargo.toml")"
 ARCH="amd64"
 MAINTAINER="Battery Manager Team <battery-manager@example.com>"
-DESCRIPTION="Battery charge threshold manager for laptops"
+DESCRIPTION="Battery charge threshold manager for laptops with peripheral battery support"
 PACKAGE_NAME="${APP_NAME}_${VERSION}_${ARCH}"
 
 # Couleurs
@@ -34,16 +35,18 @@ echo -e "${BLUE}   Battery Manager - Générateur de package .deb${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}\n"
 
 # Vérifier que le binaire existe
-if [ ! -f "target/release/battery_manager" ]; then
+if [ ! -f "${PROJECT_ROOT}/target/release/battery_manager" ]; then
     echo -e "${YELLOW}Compilation du projet...${NC}"
+    cd "${PROJECT_ROOT}"
     cargo build --release
+    cd "${PROJECT_ROOT}/install"
 fi
 
 echo -e "${GREEN}✓${NC} Binaire trouvé\n"
 
 # Créer la structure du package
-DEB_DIR="target/deb/${PACKAGE_NAME}"
-rm -rf "target/deb"
+DEB_DIR="../target/deb/${PACKAGE_NAME}"
+rm -rf "../target/deb"
 mkdir -p "${DEB_DIR}"
 
 echo -e "${BLUE}Création de la structure du package...${NC}"
@@ -159,32 +162,45 @@ mkdir -p "${DEB_DIR}/usr/share/pixmaps"
 mkdir -p "${DEB_DIR}/lib/systemd/system"
 mkdir -p "${DEB_DIR}/etc/battery-manager"
 mkdir -p "${DEB_DIR}/usr/share/doc/${APP_NAME}"
+mkdir -p "${DEB_DIR}/usr/share/battery-manager/docs"
 
 # Copier le binaire
 echo -e "${BLUE}Copie des fichiers...${NC}"
-cp target/release/battery_manager "${DEB_DIR}/usr/bin/battery-manager"
+cp "${PROJECT_ROOT}/target/release/battery_manager" "${DEB_DIR}/usr/bin/battery-manager"
 chmod 755 "${DEB_DIR}/usr/bin/battery-manager"
 echo -e "${GREEN}✓${NC} Binaire copié"
 
 # Copier l'icône
-cp resources/icon.png "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
+cp "${PROJECT_ROOT}/resources/icon.png" "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
 chmod 644 "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
 echo -e "${GREEN}✓${NC} Icône copiée"
 
 # Copier le script de restauration
-cp resources/battery-manager-restore.sh "${DEB_DIR}/usr/bin/battery-manager-restore"
+cp "${PROJECT_ROOT}/resources/battery-manager-restore.sh" "${DEB_DIR}/usr/bin/battery-manager-restore"
 chmod 755 "${DEB_DIR}/usr/bin/battery-manager-restore"
 echo -e "${GREEN}✓${NC} Script de restauration copié"
 
 # Copier le fichier .desktop
-cp resources/battery-manager.desktop "${DEB_DIR}/usr/share/applications/"
+cp "${PROJECT_ROOT}/resources/battery-manager.desktop" "${DEB_DIR}/usr/share/applications/"
 chmod 644 "${DEB_DIR}/usr/share/applications/battery-manager.desktop"
 echo -e "${GREEN}✓${NC} Fichier .desktop copié"
 
 # Copier le service systemd
-cp resources/battery-manager.service "${DEB_DIR}/lib/systemd/system/"
+cp "${PROJECT_ROOT}/resources/battery-manager.service" "${DEB_DIR}/lib/systemd/system/"
 chmod 644 "${DEB_DIR}/lib/systemd/system/battery-manager.service"
 echo -e "${GREEN}✓${NC} Service systemd copié"
+
+# Copier la documentation offline (HTML/CSS + icône)
+echo -e "${BLUE}Copie de la documentation offline...${NC}"
+cp "${PROJECT_ROOT}/docs/README.html" "${DEB_DIR}/usr/share/battery-manager/docs/README.html"
+cp "${PROJECT_ROOT}/docs/REFERENCES.html" "${DEB_DIR}/usr/share/battery-manager/docs/REFERENCES.html"
+cp "${PROJECT_ROOT}/docs/style.css" "${DEB_DIR}/usr/share/battery-manager/docs/style.css"
+cp "${PROJECT_ROOT}/docs/icon.png" "${DEB_DIR}/usr/share/battery-manager/docs/icon.png"
+chmod 644 "${DEB_DIR}/usr/share/battery-manager/docs/README.html"
+chmod 644 "${DEB_DIR}/usr/share/battery-manager/docs/REFERENCES.html"
+chmod 644 "${DEB_DIR}/usr/share/battery-manager/docs/style.css"
+chmod 644 "${DEB_DIR}/usr/share/battery-manager/docs/icon.png"
+echo -e "${GREEN}✓${NC} Documentation copiée"
 
 # Créer le répertoire de configuration
 mkdir -p "${DEB_DIR}/etc/battery-manager"
@@ -221,8 +237,8 @@ License: MIT
 EOF
 
 # Copier le README si disponible
-if [ -f "README.md" ]; then
-    cp README.md "${DEB_DIR}/usr/share/doc/${APP_NAME}/README.md"
+if [ -f "../README.md" ]; then
+    cp ../README.md "${DEB_DIR}/usr/share/doc/${APP_NAME}/README.md"
     gzip -9 -n "${DEB_DIR}/usr/share/doc/${APP_NAME}/README.md"
 fi
 
@@ -251,13 +267,13 @@ echo -e "\n${BLUE}Construction du package .deb...${NC}"
 dpkg-deb --build --root-owner-group "${DEB_DIR}"
 
 # Déplacer le .deb dans target/
-mv "${DEB_DIR}.deb" "target/${PACKAGE_NAME}.deb"
+mv "${DEB_DIR}.deb" "../target/${PACKAGE_NAME}.deb"
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}✓ Package créé avec succès !${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════${NC}\n"
 echo -e "Fichier : ${BLUE}target/${PACKAGE_NAME}.deb${NC}"
-echo -e "Taille  : $(du -h "target/${PACKAGE_NAME}.deb" | cut -f1)\n"
+echo -e "Taille  : $(du -h "../target/${PACKAGE_NAME}.deb" | cut -f1)\n"
 
 echo -e "${YELLOW}Pour installer :${NC}"
 echo -e "  sudo dpkg -i target/${PACKAGE_NAME}.deb"

@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battery Manager — README</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <input class="docs-toggle" type="radio" name="lang" id="lang-fr" checked />
+  <input class="docs-toggle" type="radio" name="lang" id="lang-en" />
+
+  <input class="docs-toggle" type="radio" name="theme" id="theme-auto" checked />
+  <input class="docs-toggle" type="radio" name="theme" id="theme-light" />
+  <input class="docs-toggle" type="radio" name="theme" id="theme-dark" />
+
+  <div class="app">
+    <div class="layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <div class="brand">
+          <img src="icon.png" alt="Battery Manager" />
+          <div>
+            <div class="title">Battery Manager</div>
+            <div class="subtitle">Docs • menu • FR/EN • thème</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control-group">
+            <div class="label">Langue / Language</div>
+            <div class="pills" role="group" aria-label="Language">
+              <label class="pill" for="lang-fr">FR</label>
+              <label class="pill" for="lang-en">EN</label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="label">Thème / Theme</div>
+            <div class="pills" role="group" aria-label="Theme">
+              <label class="pill" for="theme-auto">Auto</label>
+              <label class="pill" for="theme-light">Clair</label>
+              <label class="pill" for="theme-dark">Sombre</label>
+            </div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Pages">
+          <div class="nav-title">Pages</div>
+          <a href="README.html" aria-current="page">README</a>
+<a href="REFERENCES.html">References</a>
+
+          <div class="nav-title">Sommaire</div>
+          <div class="toc-fr"><div class="toc">
+<ul>
+<li><a href="#battery-manager">Battery Manager</a><ul>
+<li><a href="#fonctionnalites">✨ Fonctionnalités</a><ul>
+<li><a href="#gestion-de-batterie">🔋 Gestion de batterie</a></li>
+<li><a href="#internationalisation">🌍 Internationalisation</a></li>
+<li><a href="#themes">🎨 Thèmes</a></li>
+<li><a href="#architecture">🏗️ Architecture</a></li>
+</ul>
+</li>
+<li><a href="#description">📝 Description</a><ul>
+<li><a href="#ce-que-fait-cette-application">Ce que fait cette application</a></li>
+</ul>
+</li>
+<li><a href="#installation">📦 Installation</a><ul>
+<li><a href="#pour-les-utilisateurs-recommande">Pour les utilisateurs (recommandé)</a></li>
+<li><a href="#pour-les-developpeurs">Pour les développeurs</a></li>
+</ul>
+</li>
+<li><a href="#utilisation">🚀 Utilisation</a><ul>
+<li><a href="#interface">Interface</a></li>
+</ul>
+</li>
+<li><a href="#scripts-et-fonctionnement-important">🧩 Scripts et fonctionnement (important)</a><ul>
+<li><a href="#1-ou-sont-stockes-les-seuils">1) Où sont stockés les seuils ?</a></li>
+<li><a href="#2-comment-les-seuils-sont-restaures-au-boot">2) Comment les seuils sont restaurés au boot ?</a></li>
+<li><a href="#3-a-quoi-servent-les-scripts-dans-install">3) À quoi servent les scripts dans install/ ?</a></li>
+</ul>
+</li>
+<li><a href="#desinstallation">🗑️ Désinstallation</a></li>
+<li><a href="#structure-du-projet">📂 Structure du projet</a><ul>
+<li><a href="#statistiques-du-code">Statistiques du code</a></li>
+<li><a href="#fichiers-de-configuration-systeme">Fichiers de configuration système</a></li>
+<li><a href="#fichiers-de-configuration-utilisateur">Fichiers de configuration utilisateur</a></li>
+</ul>
+</li>
+<li><a href="#prerequis">🔧 Prérequis</a><ul>
+<li><a href="#pour-les-utilisateurs-finaux">Pour les utilisateurs finaux</a></li>
+<li><a href="#pour-les-developpeurs_1">Pour les développeurs</a></li>
+</ul>
+</li>
+<li><a href="#compatibilite">✅ Compatibilité</a><ul>
+<li><a href="#chemins-supportes">Chemins supportés</a></li>
+<li><a href="#verification-de-compatibilite">Vérification de compatibilité</a></li>
+</ul>
+</li>
+<li><a href="#limitations">⚠️ Limitations</a></li>
+<li><a href="#tests">🧪 Tests</a><ul>
+<li><a href="#couverture-des-tests">Couverture des tests</a></li>
+</ul>
+</li>
+<li><a href="#documentation">📚 Documentation</a></li>
+<li><a href="#qualite-aaa">🏆 Qualité AAA</a><ul>
+<li><a href="#analyse-statique">Analyse statique</a></li>
+<li><a href="#metriques-de-qualite">Métriques de qualité</a></li>
+<li><a href="#optimisations-appliquees">Optimisations appliquées</a></li>
+</ul>
+</li>
+<li><a href="#licence">📄 Licence</a></li>
+<li><a href="#contribution">🤝 Contribution</a><ul>
+<li><a href="#guidelines">Guidelines</a></li>
+</ul>
+</li>
+<li><a href="#support">📞 Support</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+          <div class="toc-en"><div class="toc">
+<ul>
+<li><a href="#battery-manager">Battery Manager</a><ul>
+<li><a href="#features">✨ Features</a><ul>
+<li><a href="#battery-management">🔋 Battery management</a></li>
+<li><a href="#internationalization">🌍 Internationalization</a></li>
+<li><a href="#themes">🎨 Themes</a></li>
+<li><a href="#architecture">🏗️ Architecture</a></li>
+</ul>
+</li>
+<li><a href="#description">📝 Description</a><ul>
+<li><a href="#what-this-app-does">What this app does</a></li>
+</ul>
+</li>
+<li><a href="#installation">📦 Installation</a><ul>
+<li><a href="#end-users-recommended">End users (recommended)</a></li>
+<li><a href="#developers">Developers</a></li>
+</ul>
+</li>
+<li><a href="#usage">🚀 Usage</a><ul>
+<li><a href="#ui">UI</a></li>
+</ul>
+</li>
+<li><a href="#scripts-behavior-important">🧩 Scripts &amp; behavior (important)</a><ul>
+<li><a href="#1-where-are-thresholds-stored">1) Where are thresholds stored?</a></li>
+<li><a href="#2-how-are-thresholds-restored-at-boot">2) How are thresholds restored at boot?</a></li>
+<li><a href="#3-what-are-the-scripts-in-install">3) What are the scripts in install/?</a></li>
+</ul>
+</li>
+<li><a href="#uninstall">🗑️ Uninstall</a></li>
+<li><a href="#project-structure">📂 Project structure</a><ul>
+<li><a href="#code-stats">Code stats</a></li>
+</ul>
+</li>
+<li><a href="#requirements">🔧 Requirements</a><ul>
+<li><a href="#end-users">End users</a></li>
+<li><a href="#developers_1">Developers</a></li>
+</ul>
+</li>
+<li><a href="#compatibility">✅ Compatibility</a></li>
+<li><a href="#limitations">⚠️ Limitations</a></li>
+<li><a href="#tests">🧪 Tests</a></li>
+<li><a href="#aaa-quality">🏆 AAA Quality</a></li>
+<li><a href="#license">📄 License</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <div class="lang lang-fr"><h1 id="battery-manager">Battery Manager<a class="headerlink" href="#battery-manager" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Gestionnaire de seuils de charge pour batteries Linux avec interface GTK4</p>
+</blockquote>
+<p><img alt="Battery Manager" src="icon.png" /></p>
+<p><a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-1.92.0-orange.svg" /></a>
+<a href="https://gtk.org/"><img alt="GTK4" src="https://img.shields.io/badge/GTK-4.0-blue.svg" /></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
+<a href="#tests"><img alt="Tests" src="https://img.shields.io/badge/Tests-39%2F39_passing-success.svg" /></a>
+<a href="#qualit%C3%A9-aaa"><img alt="Quality" src="https://img.shields.io/badge/Clippy-0_warnings-success.svg" /></a>
+<a href="#structure-du-projet"><img alt="Code" src="https://img.shields.io/badge/Lines-2728_Rust-blueviolet.svg" /></a></p>
+<hr />
+<h2 id="fonctionnalites">✨ Fonctionnalités<a class="headerlink" href="#fonctionnalites" title="Permanent link">&para;</a></h2>
+<h3 id="gestion-de-batterie">🔋 Gestion de batterie<a class="headerlink" href="#gestion-de-batterie" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Visualisation en temps réel</strong> : charge, santé, voltage, puissance, cycles</li>
+<li><strong>Configuration des seuils</strong> : début et fin de charge (0-100%)</li>
+<li><strong>Sauvegarde persistante</strong> : restauration automatique au démarrage via systemd</li>
+<li><strong>Support multi-fabricants</strong> : ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo</li>
+</ul>
+<h3 id="internationalisation">🌍 Internationalisation<a class="headerlink" href="#internationalisation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Bilingue</strong> : Français et Anglais (80+ clés de traduction)</li>
+<li><strong>Détection automatique</strong> : basée sur la langue système (<code>$LANG</code>)</li>
+<li><strong>Switch en temps réel</strong> : changement de langue dans l'interface</li>
+<li><strong>Configuration persistante</strong> : <code>~/.config/battery-manager/language.conf</code></li>
+</ul>
+<h3 id="themes">🎨 Thèmes<a class="headerlink" href="#themes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Thème clair</strong> : nuances de gris (#f6f5f4 - #ffffff)</li>
+<li><strong>Thème sombre</strong> : nuances de gris (#252525 - #424242)</li>
+<li><strong>Application instantanée</strong> : changement de thème sans redémarrage</li>
+<li><strong>Configuration persistante</strong> : <code>~/.config/battery-manager/theme.conf</code></li>
+<li><strong>Design confortable</strong> : sans blanc/noir pur pour le confort visuel</li>
+</ul>
+<h3 id="architecture">🏗️ Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>SOLID</strong> : séparation stricte core/ (logique) et ui/ (présentation)</li>
+<li><strong>39 tests unitaires</strong> : 100% de réussite</li>
+<li><strong>Documentation complète</strong> : docstrings Rust standard</li>
+<li><strong>Qualité AAA</strong> : 0 warning Clippy (pedantic + nursery)</li>
+</ul>
+<hr />
+<h2 id="description">📝 Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
+<p>Application simple permettant de visualiser les informations de batterie et de configurer les seuils de charge sur les ordinateurs portables Linux compatibles.</p>
+<p><strong>Technologies</strong> : Écrit en Rust avec GTK4, utilise l'interface sysfs du noyau Linux pour lire et modifier les paramètres de charge.</p>
+<h3 id="ce-que-fait-cette-application">Ce que fait cette application<a class="headerlink" href="#ce-que-fait-cette-application" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ Affiche les informations de base de la batterie (charge, état, santé, cycles)</li>
+<li>✅ Permet de définir des seuils de début et fin de charge (prolonge la durée de vie de la batterie)</li>
+<li>✅ Sauvegarde les seuils dans <code>/etc/battery-manager/BAT*.conf</code> (format texte simple)</li>
+<li>✅ Restaure les seuils au démarrage via un service systemd</li>
+<li>✅ Écrit directement dans <code>/sys/class/power_supply/</code> (nécessite pkexec)</li>
+<li>✅ Détecte les batteries de périphériques (souris/clavier sans fil)</li>
+</ul>
+<hr />
+<h2 id="installation">📦 Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="pour-les-utilisateurs-recommande">Pour les utilisateurs (recommandé)<a class="headerlink" href="#pour-les-utilisateurs-recommande" title="Permanent link">&para;</a></h3>
+<p>Installation complète avec icône, raccourci menu et service systemd :</p>
+<pre><code class="language-bash"># Télécharger le .deb depuis les releases GitHub
+sudo dpkg -i battery-manager_0.9.8_amd64.deb
+</code></pre>
+<p><strong>Le package .deb installe automatiquement :</strong></p>
+<ul>
+<li>✅ Le binaire exécutable (<code>/usr/bin/battery-manager</code>)</li>
+<li>✅ L'icône et le raccourci dans le menu applications</li>
+<li>✅ Le service systemd (restauration auto au démarrage)</li>
+<li>✅ Toutes les dépendances GTK4 nécessaires</li>
+</ul>
+<h3 id="pour-les-developpeurs">Pour les développeurs<a class="headerlink" href="#pour-les-developpeurs" title="Permanent link">&para;</a></h3>
+<p>Installation manuelle du service uniquement (sans raccourci menu) :</p>
+<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+cd Battery_Manager
+cargo build --release
+cd install
+sudo ./install.sh      # Installe uniquement le service systemd
+</code></pre>
+<blockquote>
+<p><strong>Note</strong> : <code>install.sh</code> est conçu pour le développement. Il n'installe PAS le raccourci menu ni l'icône. Pour une installation complète utilisateur, utilisez le package <code>.deb</code>.</p>
+</blockquote>
+<hr />
+<h2 id="utilisation">🚀 Utilisation<a class="headerlink" href="#utilisation" title="Permanent link">&para;</a></h2>
+<p>Lancer l'application depuis le menu ou en terminal :</p>
+<pre><code class="language-bash">battery-manager                # Lance avec langue système
+battery-manager --lang=fr      # Force le français
+battery-manager --lang=en      # Force l'anglais
+battery-manager --debug        # Active les logs de debug
+battery-manager --help         # Affiche l'aide complète
+</code></pre>
+<h3 id="interface">Interface<a class="headerlink" href="#interface" title="Permanent link">&para;</a></h3>
+<p>L'interface comporte <strong>4 onglets</strong> :</p>
+<ul>
+<li><strong>📊 Informations</strong> : état de la batterie (charge, santé, voltage, puissance, cycles)</li>
+<li><strong>🖱️ Périphériques</strong> : batteries externes (souris, clavier sans fil)</li>
+<li><strong>⚙️ Réglages</strong> : curseurs pour les seuils de charge, alarme, activation service systemd</li>
+<li><strong>🎨 Interface</strong> : choix de la langue (FR/EN) et du thème (clair/sombre)</li>
+</ul>
+<p>Les seuils sont appliqués <strong>immédiatement</strong> et sauvegardés pour la prochaine session.</p>
+<hr />
+<h2 id="scripts-et-fonctionnement-important">🧩 Scripts et fonctionnement (important)<a class="headerlink" href="#scripts-et-fonctionnement-important" title="Permanent link">&para;</a></h2>
+<h3 id="1-ou-sont-stockes-les-seuils">1) Où sont stockés les seuils ?<a class="headerlink" href="#1-ou-sont-stockes-les-seuils" title="Permanent link">&para;</a></h3>
+<p>Les seuils sont sauvegardés dans des fichiers texte :</p>
+<ul>
+<li><code>/etc/battery-manager/BAT*.conf</code></li>
+</ul>
+<p>Format attendu (exemple) :</p>
+<pre><code class="language-text">START_THRESHOLD=60
+STOP_THRESHOLD=80
+</code></pre>
+<p>Notes :</p>
+<ul>
+<li><code>STOP_THRESHOLD</code> est requis.</li>
+<li><code>START_THRESHOLD</code> est <strong>optionnel</strong> : certains laptops ne supportent pas un seuil de début.</li>
+</ul>
+<h3 id="2-comment-les-seuils-sont-restaures-au-boot">2) Comment les seuils sont restaurés au boot ?<a class="headerlink" href="#2-comment-les-seuils-sont-restaures-au-boot" title="Permanent link">&para;</a></h3>
+<p>Le service systemd <code>battery-manager.service</code> exécute un script one-shot :</p>
+<ul>
+<li><code>/usr/bin/battery-manager-restore</code></li>
+</ul>
+<p>Ce script lit <code>/etc/battery-manager/*.conf</code> puis tente d'écrire dans sysfs.</p>
+<p>Seuil de début (si défini) :</p>
+<ul>
+<li><code>/sys/class/power_supply/BAT*/charge_control_start_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_start_threshold</code></li>
+</ul>
+<p>Seuil de fin :</p>
+<ul>
+<li><code>/sys/class/power_supply/BAT*/charge_control_end_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_stop_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_end_threshold</code></li>
+</ul>
+<p>Le script essaie ces chemins dans l'ordre et applique le premier fichier disponible/inscriptible.</p>
+<p>Commandes utiles :</p>
+<pre><code class="language-bash">systemctl status battery-manager.service
+sudo battery-manager-restore
+journalctl -u battery-manager.service -b --no-pager
+</code></pre>
+<h3 id="3-a-quoi-servent-les-scripts-dans-install">3) À quoi servent les scripts dans <code>install/</code> ?<a class="headerlink" href="#3-a-quoi-servent-les-scripts-dans-install" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>install/install.sh</code> : installe <strong>binaire + restore script + service systemd</strong> (mode dev, sans menu/icon)</li>
+<li><code>install/uninstall.sh</code> : supprime ces fichiers (conserve <code>/etc/battery-manager/</code>)</li>
+<li><code>install/build-deb.sh</code> : construit le package <code>.deb</code> (installation utilisateur complète)</li>
+</ul>
+<hr />
+<h2 id="desinstallation">🗑️ Désinstallation<a class="headerlink" href="#desinstallation" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash"># Via .deb
+sudo apt remove battery-manager
+
+# Via script manuel
+cd Battery_Manager/install
+sudo ./uninstall.sh
+</code></pre>
+<hr />
+<h2 id="structure-du-projet">📂 Structure du projet<a class="headerlink" href="#structure-du-projet" title="Permanent link">&para;</a></h2>
+<pre><code>Battery_Manager/                        # 7 directories, 16 files
+├── Cargo.toml                          # Dépendances Rust (GTK4, serde)
+├── Cargo.lock                          # Versions verrouillées des dépendances
+├── LICENSE                             # Licence MIT
+├── README.md                           # Documentation principale (Markdown)
+├── README.html                         # Documentation (HTML)
+├── REFERENCES.md                       # Références et ressources (Markdown)
+├── REFERENCES.html                     # Références et ressources (HTML)
+├── docs/                               # Styles docs partagés
+│   └── style.css                       # CSS moderne (menu + thème + FR/EN)
+│
+├── install/                            # Scripts d'installation
+│   ├── build-deb.sh                    # Générateur de package .deb
+│   ├── install.sh                      # Installation manuelle (dev)
+│   └── uninstall.sh                    # Désinstallation manuelle
+│
+├── resources/                          # Fichiers système
+│   ├── battery-manager.desktop         # Lanceur menu applications
+│   ├── battery-manager.service         # Service systemd
+│   ├── battery-manager-restore.sh      # Script de restauration (appelé au boot)
+│   └── icon.png                        # Icône de l'application (8.4KB)
+│
+├── src/                                # Code source Rust (2728 lignes, 17 fichiers)
+│   ├── main.rs                         # Point d'entrée de l'application
+│   │
+│   ├── core/                           # Logique métier (indépendante de l'UI)
+│   │   ├── mod.rs                      # Exports du module core
+│   │   ├── battery.rs                  # Lecture infos batterie via sysfs
+│   │   ├── power_supply.rs             # Détection alimentation secteur (AC)
+│   │   ├── vendor_detection.rs         # Détection fabricant (ASUS, Lenovo, etc.)
+│   │   ├── traits.rs                   # Traits pour injection de dépendances
+│   │   ├── peripheral.rs               # Détection batteries périphériques
+│   │   ├── i18n.rs                     # Système de traduction FR/EN
+│   │   └── debug.rs                    # Macros de debug (debug!, debug_ui!)
+│   │
+│   └── ui/                             # Interface utilisateur GTK4
+│       ├── mod.rs                      # Exports du module ui
+│       ├── app.rs                      # Fenêtre principale et auto-refresh
+│       ├── components.rs               # Composants réutilisables
+│       ├── info_tab.rs                 # Onglet &quot;Informations&quot;
+│       ├── peripherals_tab.rs          # Onglet &quot;Périphériques&quot;
+│       ├── settings_tab.rs             # Onglet &quot;Réglages&quot;
+│       ├── ui_tab.rs                   # Onglet &quot;Interface&quot;
+│       └── theme.rs                    # Gestion des thèmes CSS
+│
+└── target/                             # Dossier de build Cargo (ignoré par git)
+    ├── debug/                          # Binaires de développement
+    └── release/                        # Binaires optimisés
+        └── battery_manager             # Exécutable final
+</code></pre>
+<h3 id="statistiques-du-code">Statistiques du code<a class="headerlink" href="#statistiques-du-code" title="Permanent link">&para;</a></h3>
+<pre><code>Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Rust                            17            453            578           2728
+-------------------------------------------------------------------------------
+</code></pre>
+<h3 id="fichiers-de-configuration-systeme">Fichiers de configuration système<a class="headerlink" href="#fichiers-de-configuration-systeme" title="Permanent link">&para;</a></h3>
+<p>Après installation, l'application crée :</p>
+<ul>
+<li><code>/etc/battery-manager/BAT*.conf</code> : seuils configurés (<code>START_THRESHOLD=60\nSTOP_THRESHOLD=80</code>)</li>
+<li><code>/usr/bin/battery-manager</code> : binaire exécutable</li>
+<li><code>/usr/bin/battery-manager-restore</code> : script de restauration</li>
+<li><code>/lib/systemd/system/battery-manager.service</code> : service systemd</li>
+<li><code>/usr/share/applications/battery-manager.desktop</code> : lanceur menu</li>
+<li><code>/usr/share/pixmaps/battery-manager.png</code> : icône</li>
+</ul>
+<h3 id="fichiers-de-configuration-utilisateur">Fichiers de configuration utilisateur<a class="headerlink" href="#fichiers-de-configuration-utilisateur" title="Permanent link">&para;</a></h3>
+<p>L'application sauvegarde les préférences dans <code>~/.config/battery-manager/</code> :</p>
+<ul>
+<li><code>language.conf</code> : langue choisie (<code>fr</code> ou <code>en</code>)</li>
+<li><code>theme.conf</code> : thème choisi (<code>light</code> ou <code>dark</code>)</li>
+</ul>
+<hr />
+<h2 id="prerequis">🔧 Prérequis<a class="headerlink" href="#prerequis" title="Permanent link">&para;</a></h2>
+<h3 id="pour-les-utilisateurs-finaux">Pour les utilisateurs finaux<a class="headerlink" href="#pour-les-utilisateurs-finaux" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>OS</strong> : Debian et dérivés (Ubuntu, Mint, Pop!_OS, etc.)</li>
+<li><strong>GTK4</strong> : installation automatique via le package .deb</li>
+<li><strong>pkexec</strong> : PolicyKit (généralement préinstallé)</li>
+<li><strong>Matériel</strong> : ordinateur portable avec support sysfs pour les seuils de charge</li>
+</ul>
+<h3 id="pour-les-developpeurs_1">Pour les développeurs<a class="headerlink" href="#pour-les-developpeurs_1" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># Outils de développement Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Dépendances GTK4
+sudo apt install libgtk-4-dev build-essential policykit-1
+</code></pre>
+<hr />
+<h2 id="compatibilite">✅ Compatibilité<a class="headerlink" href="#compatibilite" title="Permanent link">&para;</a></h2>
+<p>L'application fonctionne sur les ordinateurs portables dont le <strong>noyau Linux expose les fichiers de contrôle de charge</strong> dans <code>/sys/class/power_supply/BAT*/</code>.</p>
+<h3 id="chemins-supportes">Chemins supportés<a class="headerlink" href="#chemins-supportes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>charge_control_start_threshold</code> / <code>charge_control_end_threshold</code> (ASUS, Huawei)</li>
+<li><code>charge_start_threshold</code> / <code>charge_stop_threshold</code> (Lenovo, Samsung)</li>
+<li><code>charge_end_threshold</code> (Dell, System76)</li>
+</ul>
+<h3 id="verification-de-compatibilite">Vérification de compatibilité<a class="headerlink" href="#verification-de-compatibilite" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># Vérifier les fichiers disponibles
+ls /sys/class/power_supply/BAT0/
+
+# Tester l'écriture (nécessite root)
+echo 80 | sudo tee /sys/class/power_supply/BAT0/charge_control_end_threshold
+</code></pre>
+<p>Fonctionnera si votre ordinateur portable expose ces fichiers via sysfs.</p>
+<hr />
+<h2 id="limitations">⚠️ Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>❌ Nécessite un support matériel et noyau approprié</li>
+<li>❌ Certains fabricants n'exposent qu'un seul seuil (fin de charge uniquement)</li>
+<li>❌ L'application ne peut pas créer de support là où le matériel/noyau ne le fournit pas</li>
+<li>❌ Le changement de langue nécessite un redémarrage de l'application</li>
+</ul>
+<hr />
+<h2 id="tests">🧪 Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
+<p>L'application dispose de <strong>39 tests unitaires</strong> avec <strong>100% de réussite</strong> :</p>
+<pre><code class="language-bash">cargo test                    # Exécuter tous les tests
+cargo test --test-threads=1   # Exécuter en séquentiel (recommandé pour i18n)
+
+# Résultat attendu :
+# test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<h3 id="couverture-des-tests">Couverture des tests<a class="headerlink" href="#couverture-des-tests" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>Validation des entrées</strong> : noms de batterie, seuils invalides</li>
+<li>✅ <strong>Calculs</strong> : santé, usure, puissance, conversions (mAh, V, mA, W)</li>
+<li>✅ <strong>Détection fabricant</strong> : ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo</li>
+<li>✅ <strong>Internationalisation</strong> : traductions FR/EN, clés manquantes</li>
+<li>✅ <strong>Traits et mocks</strong> : injection de dépendances pour les tests</li>
+</ul>
+<hr />
+<h2 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<p>Générer la documentation du code :</p>
+<pre><code class="language-bash">cargo doc --open              # Génère et ouvre la doc HTML dans le navigateur
+</code></pre>
+<p>La documentation inclut :</p>
+<ul>
+<li>✅ Toutes les fonctions publiques avec docstrings</li>
+<li>✅ Exemples d'utilisation</li>
+<li>✅ Structure des modules</li>
+<li>✅ Graphes de dépendances</li>
+</ul>
+<hr />
+<h2 id="qualite-aaa">🏆 Qualité AAA<a class="headerlink" href="#qualite-aaa" title="Permanent link">&para;</a></h2>
+<h3 id="analyse-statique">Analyse statique<a class="headerlink" href="#analyse-statique" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo fmt                     # Formater le code (style officiel Rust)
+cargo clippy --all-features --all-targets -- -W clippy::pedantic -W clippy::nursery
+                              # Analyse stricte : 0 warning ✅
+
+cargo build --release         # Compiler en mode release
+</code></pre>
+<h3 id="metriques-de-qualite">Métriques de qualité<a class="headerlink" href="#metriques-de-qualite" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Valeur</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Warnings Clippy</strong></td>
+<td>0 / 0</td>
+<td>✅ 100%</td>
+</tr>
+<tr>
+<td><strong>Tests unitaires</strong></td>
+<td>39 / 39</td>
+<td>✅ 100%</td>
+</tr>
+<tr>
+<td><strong>Documentation</strong></td>
+<td>100%</td>
+<td>✅ Complète</td>
+</tr>
+<tr>
+<td><strong>Sécurité</strong></td>
+<td>0 <code>unwrap()</code></td>
+<td>✅ Hardened</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>SOLID</td>
+<td>✅ Clean Code</td>
+</tr>
+</tbody>
+</table>
+<h3 id="optimisations-appliquees">Optimisations appliquées<a class="headerlink" href="#optimisations-appliquees" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>0 warnings Clippy</strong> (pedantic + nursery)</li>
+<li>✅ <strong>Validation stricte</strong> : noms de batterie, seuils, chemins de fichiers</li>
+<li>✅ <strong>Gestion d'erreurs</strong> : <code>Result&lt;T, E&gt;</code> partout, <code>expect()</code> avec messages descriptifs</li>
+<li>✅ <strong>Séparation des préoccupations</strong> : core/ sans dépendances GTK</li>
+<li>✅ <strong>Injection de dépendances</strong> : traits pour testabilité</li>
+<li>✅ <strong>Code factorisé</strong> : helpers réutilisables (716 lignes économisées)</li>
+</ul>
+<hr />
+<h2 id="licence">📄 Licence<a class="headerlink" href="#licence" title="Permanent link">&para;</a></h2>
+<p>MIT - voir <a href="LICENSE">LICENSE</a></p>
+<hr />
+<h2 id="contribution">🤝 Contribution<a class="headerlink" href="#contribution" title="Permanent link">&para;</a></h2>
+<p>Les contributions sont les bienvenues ! Pour contribuer :</p>
+<ol>
+<li>Fork le projet</li>
+<li>Créer une branche (<code>git checkout -b feature/amélioration</code>)</li>
+<li>Commit les changements (<code>git commit -m 'Ajout fonctionnalité'</code>)</li>
+<li>Push vers la branche (<code>git push origin feature/amélioration</code>)</li>
+<li>Ouvrir une Pull Request</li>
+</ol>
+<h3 id="guidelines">Guidelines<a class="headerlink" href="#guidelines" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ Respecter <code>cargo fmt</code> et <code>cargo clippy</code></li>
+<li>✅ Ajouter des tests pour les nouvelles fonctionnalités</li>
+<li>✅ Documenter les fonctions publiques</li>
+<li>✅ Mettre à jour le README si nécessaire</li>
+</ul>
+<hr />
+<h2 id="support">📞 Support<a class="headerlink" href="#support" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Issues</strong> : <a href="https://github.com/weedmanu/Battery_Charge_Manager/issues">GitHub Issues</a></li>
+<li><strong>Discussions</strong> : <a href="https://github.com/weedmanu/Battery_Charge_Manager/discussions">GitHub Discussions</a></li>
+</ul>
+<hr />
+<p><strong>Made with ❤️ in Rust</strong> | Version 0.9.8</p></div>
+        <div class="lang lang-en"><h1 id="battery-manager">Battery Manager<a class="headerlink" href="#battery-manager" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Battery charge threshold manager for Linux laptops with a GTK4 UI</p>
+</blockquote>
+<p><img alt="Battery Manager" src="icon.png" /></p>
+<p><a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-1.92.0-orange.svg" /></a>
+<a href="https://gtk.org/"><img alt="GTK4" src="https://img.shields.io/badge/GTK-4.0-blue.svg" /></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
+<a href="#tests"><img alt="Tests" src="https://img.shields.io/badge/Tests-39%2F39_passing-success.svg" /></a>
+<a href="#aaa-quality"><img alt="Quality" src="https://img.shields.io/badge/Clippy-0_warnings-success.svg" /></a>
+<a href="#project-structure"><img alt="Code" src="https://img.shields.io/badge/Lines-2728_Rust-blueviolet.svg" /></a></p>
+<hr />
+<h2 id="features">✨ Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<h3 id="battery-management">🔋 Battery management<a class="headerlink" href="#battery-management" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Real-time view</strong>: charge, health, voltage, power, cycles</li>
+<li><strong>Threshold configuration</strong>: start/stop charge (0-100%)</li>
+<li><strong>Persistent restore</strong>: automatically restored at boot via systemd</li>
+<li><strong>Multi-vendor support</strong>: ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo</li>
+</ul>
+<h3 id="internationalization">🌍 Internationalization<a class="headerlink" href="#internationalization" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Bilingual</strong>: French + English (80+ translation keys)</li>
+<li><strong>Auto-detect</strong>: based on system language (<code>$LANG</code>)</li>
+<li><strong>Live switch</strong>: change language from the UI</li>
+<li><strong>Persistent config</strong>: <code>~/.config/battery-manager/language.conf</code></li>
+</ul>
+<h3 id="themes">🎨 Themes<a class="headerlink" href="#themes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Light theme</strong>: gray palette (#f6f5f4 - #ffffff)</li>
+<li><strong>Dark theme</strong>: gray palette (#252525 - #424242)</li>
+<li><strong>Instant apply</strong>: no restart required</li>
+<li><strong>Persistent config</strong>: <code>~/.config/battery-manager/theme.conf</code></li>
+<li><strong>Eye-friendly</strong>: avoids pure white/black</li>
+</ul>
+<h3 id="architecture">🏗️ Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>SOLID</strong>: strict separation between core/ (logic) and ui/ (presentation)</li>
+<li><strong>39 unit tests</strong>: 100% passing</li>
+<li><strong>Complete docs</strong>: standard Rust docstrings</li>
+<li><strong>AAA quality</strong>: 0 Clippy warnings (pedantic + nursery)</li>
+</ul>
+<hr />
+<h2 id="description">📝 Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
+<p>Simple desktop app to view battery information and configure charge thresholds on supported Linux laptops.</p>
+<p><strong>Tech</strong>: written in Rust + GTK4, uses Linux sysfs to read/write charging parameters.</p>
+<h3 id="what-this-app-does">What this app does<a class="headerlink" href="#what-this-app-does" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ Displays key battery info (charge, status, health, cycles)</li>
+<li>✅ Lets you set start/stop thresholds (battery longevity)</li>
+<li>✅ Saves thresholds to <code>/etc/battery-manager/BAT*.conf</code> (simple text format)</li>
+<li>✅ Restores thresholds at boot via a systemd service</li>
+<li>✅ Writes to <code>/sys/class/power_supply/</code> (needs pkexec)</li>
+<li>✅ Detects peripheral batteries (wireless mouse/keyboard)</li>
+</ul>
+<hr />
+<h2 id="installation">📦 Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="end-users-recommended">End users (recommended)<a class="headerlink" href="#end-users-recommended" title="Permanent link">&para;</a></h3>
+<p>Full install with menu entry, icon, and systemd service:</p>
+<pre><code class="language-bash">sudo dpkg -i battery-manager_0.9.8_amd64.deb
+</code></pre>
+<h3 id="developers">Developers<a class="headerlink" href="#developers" title="Permanent link">&para;</a></h3>
+<p>Manual service install (no menu entry/icon):</p>
+<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+cd Battery_Manager
+cargo build --release
+cd install
+sudo ./install.sh
+</code></pre>
+<blockquote>
+<p>Note: <code>install.sh</code> is developer-oriented. For a full user install, use the <code>.deb</code> package.</p>
+</blockquote>
+<hr />
+<h2 id="usage">🚀 Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>Launch from the app menu or from a terminal:</p>
+<pre><code class="language-bash">battery-manager
+battery-manager --lang=fr
+battery-manager --lang=en
+battery-manager --debug
+battery-manager --help
+</code></pre>
+<h3 id="ui">UI<a class="headerlink" href="#ui" title="Permanent link">&para;</a></h3>
+<p>The UI has <strong>4 tabs</strong>:</p>
+<ul>
+<li><strong>📊 Information</strong>: charge/health/voltage/power/cycles</li>
+<li><strong>🖱️ Peripherals</strong>: external batteries (mouse/keyboard)</li>
+<li><strong>⚙️ Settings</strong>: thresholds, alarm, systemd toggle</li>
+<li><strong>🎨 Interface</strong>: language + theme</li>
+</ul>
+<p>Thresholds are applied immediately and persisted.</p>
+<hr />
+<h2 id="scripts-behavior-important">🧩 Scripts &amp; behavior (important)<a class="headerlink" href="#scripts-behavior-important" title="Permanent link">&para;</a></h2>
+<h3 id="1-where-are-thresholds-stored">1) Where are thresholds stored?<a class="headerlink" href="#1-where-are-thresholds-stored" title="Permanent link">&para;</a></h3>
+<p>Thresholds are saved as plain text files:</p>
+<ul>
+<li><code>/etc/battery-manager/BAT*.conf</code></li>
+</ul>
+<p>Expected format (example):</p>
+<pre><code class="language-text">START_THRESHOLD=60
+STOP_THRESHOLD=80
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li><code>STOP_THRESHOLD</code> is required.</li>
+<li><code>START_THRESHOLD</code> is <strong>optional</strong>: many laptops only support a stop/end threshold.</li>
+</ul>
+<h3 id="2-how-are-thresholds-restored-at-boot">2) How are thresholds restored at boot?<a class="headerlink" href="#2-how-are-thresholds-restored-at-boot" title="Permanent link">&para;</a></h3>
+<p>The systemd service <code>battery-manager.service</code> runs a one-shot script:</p>
+<ul>
+<li><code>/usr/bin/battery-manager-restore</code></li>
+</ul>
+<p>It reads <code>/etc/battery-manager/*.conf</code> and writes to sysfs.</p>
+<p>Start threshold (if set):</p>
+<ul>
+<li><code>/sys/class/power_supply/BAT*/charge_control_start_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_start_threshold</code></li>
+</ul>
+<p>Stop threshold:</p>
+<ul>
+<li><code>/sys/class/power_supply/BAT*/charge_control_end_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_stop_threshold</code></li>
+<li><code>/sys/class/power_supply/BAT*/charge_end_threshold</code></li>
+</ul>
+<p>The script tries these paths in order and uses the first writable file it finds.</p>
+<p>Useful commands:</p>
+<pre><code class="language-bash">systemctl status battery-manager.service
+sudo battery-manager-restore
+journalctl -u battery-manager.service -b --no-pager
+</code></pre>
+<h3 id="3-what-are-the-scripts-in-install">3) What are the scripts in <code>install/</code>?<a class="headerlink" href="#3-what-are-the-scripts-in-install" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>install/install.sh</code>: installs <strong>binary + restore script + systemd service</strong> (dev mode, no menu/icon)</li>
+<li><code>install/uninstall.sh</code>: removes those files (keeps <code>/etc/battery-manager/</code>)</li>
+<li><code>install/build-deb.sh</code>: builds the <code>.deb</code> package (full end-user install)</li>
+</ul>
+<hr />
+<h2 id="uninstall">🗑️ Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">sudo apt remove battery-manager
+
+cd Battery_Manager/install
+sudo ./uninstall.sh
+</code></pre>
+<hr />
+<h2 id="project-structure">📂 Project structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
+<pre><code>Battery_Manager/                        # 7 directories, 16 files
+├── Cargo.toml                          # Rust deps (GTK4, serde)
+├── Cargo.lock                          # Locked dependency versions
+├── LICENSE                             # MIT
+├── README.md                           # Main documentation (Markdown)
+├── README.html                         # Main documentation (HTML)
+├── REFERENCES.md                       # References (Markdown)
+├── REFERENCES.html                     # References (HTML)
+├── docs/
+│   └── style.css                       # Modern docs CSS (menu + theme + FR/EN)
+│
+├── install/
+│   ├── build-deb.sh
+│   ├── install.sh
+│   └── uninstall.sh
+│
+├── resources/
+│   ├── battery-manager.desktop
+│   ├── battery-manager-restore.sh
+│   ├── battery-manager.service
+│   └── icon.png
+│
+└── src/                                # Rust source (2728 LOC, 17 files)
+    ├── core/
+    ├── ui/
+    └── main.rs
+</code></pre>
+<h3 id="code-stats">Code stats<a class="headerlink" href="#code-stats" title="Permanent link">&para;</a></h3>
+<pre><code>Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Rust                            17            453            578           2728
+-------------------------------------------------------------------------------
+</code></pre>
+<hr />
+<h2 id="requirements">🔧 Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<h3 id="end-users">End users<a class="headerlink" href="#end-users" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Debian-based distro (Ubuntu/Mint/Pop!_OS, ...)</li>
+<li>GTK4 deps are installed via the <code>.deb</code></li>
+<li>pkexec (PolicyKit)</li>
+<li>Hardware/kernel support for charge thresholds</li>
+</ul>
+<h3 id="developers_1">Developers<a class="headerlink" href="#developers_1" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+sudo apt install libgtk-4-dev build-essential policykit-1
+</code></pre>
+<hr />
+<h2 id="compatibility">✅ Compatibility<a class="headerlink" href="#compatibility" title="Permanent link">&para;</a></h2>
+<p>Works on laptops exposing threshold controls via <code>/sys/class/power_supply/BAT*/</code>.</p>
+<p>Supported sysfs names:</p>
+<ul>
+<li><code>charge_control_start_threshold</code> / <code>charge_control_end_threshold</code></li>
+<li><code>charge_start_threshold</code> / <code>charge_stop_threshold</code></li>
+<li><code>charge_end_threshold</code></li>
+</ul>
+<hr />
+<h2 id="limitations">⚠️ Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Requires proper hardware/kernel support</li>
+<li>Some vendors expose only one threshold</li>
+<li>Language change requires restarting the app</li>
+</ul>
+<hr />
+<h2 id="tests">🧪 Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">cargo test
+cargo test --test-threads=1
+</code></pre>
+<p>Expected:</p>
+<pre><code class="language-text">test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<hr />
+<h2 id="aaa-quality">🏆 AAA Quality<a class="headerlink" href="#aaa-quality" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">cargo fmt
+cargo clippy --all-features --all-targets -- -W clippy::pedantic -W clippy::nursery
+cargo build --release
+</code></pre>
+<hr />
+<h2 id="license">📄 License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
+<p>MIT — see <a href="LICENSE">LICENSE</a></p></div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

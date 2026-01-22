@@ -12,8 +12,10 @@ use crate::ui::components::InfoCard;
 ///
 /// # Returns
 ///
-/// ScrolledWindow containing language and theme controls
+/// `ScrolledWindow` containing language and theme controls
+#[allow(clippy::too_many_lines)]
 pub fn build_ui_tab() -> ScrolledWindow {
+    crate::core::debug::debug_log("🎛️ [UI_TAB] Building UI preferences tab");
     let scrolled = ScrolledWindow::new();
     scrolled.set_vexpand(true);
 
@@ -59,6 +61,10 @@ pub fn build_ui_tab() -> ScrolledWindow {
         glib::Propagation::Proceed,
         move |_switch, state| {
             let new_lang = if state { "en" } else { "fr" };
+
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🌐 [UI_TAB] Language switch toggled -> {new_lang}"
+            ));
             crate::core::i18n::set_language(new_lang);
 
             // Save to config file
@@ -67,12 +73,16 @@ pub fn build_ui_tab() -> ScrolledWindow {
                 let _ = std::fs::create_dir_all(&app_config_dir);
                 let config_file = app_config_dir.join("language.conf");
                 let _ = std::fs::write(config_file, new_lang);
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "💾 [UI_TAB] Saved language.conf -> {new_lang}"
+                ));
             }
 
             lang_status.set_markup(&format!(
-                "<span color='orange' size='small'>{}</span>",
+                "<span size='small'>{}</span>",
                 t("restart_required")
             ));
+            lang_status.add_css_class("color-warning");
 
             glib::Propagation::Proceed
         }
@@ -122,6 +132,9 @@ pub fn build_ui_tab() -> ScrolledWindow {
             crate::ui::theme::set_theme(new_theme);
 
             // Apply theme immediately
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🎨 [UI_TAB] Theme switch toggled -> {new_theme}"
+            ));
             if new_theme == "dark" {
                 crate::ui::theme::apply_dark_theme();
             } else {
@@ -134,12 +147,21 @@ pub fn build_ui_tab() -> ScrolledWindow {
                 let _ = std::fs::create_dir_all(&app_config_dir);
                 let config_file = app_config_dir.join("theme.conf");
                 let _ = std::fs::write(config_file, new_theme);
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "💾 [UI_TAB] Saved theme.conf -> {new_theme}"
+                ));
             }
 
             theme_status.set_markup(&format!(
-                "<span color='green' size='small'>✓ {}</span>",
+                "<span size='small'>✓ {}</span>",
                 t("theme_applied")
             ));
+            theme_status.remove_css_class("color-warning");
+            theme_status.remove_css_class("color-danger");
+            theme_status.add_css_class("color-success");
+            crate::core::debug::debug_log(
+                "✅ [UI_TAB] Theme status message updated with color-success class",
+            );
 
             glib::Propagation::Proceed
         }

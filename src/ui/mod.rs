@@ -5,6 +5,7 @@
 pub mod app;
 pub mod components;
 pub mod info_tab;
+pub mod peripherals_tab;
 pub mod settings_tab;
 pub mod theme;
 pub mod ui_tab;

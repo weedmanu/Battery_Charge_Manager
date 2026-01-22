@@ -1,9 +1,9 @@
 [package]
 name = "battery_manager"
-version = "0.1.0"
+version = "0.9.8"
 edition = "2021"
 authors = ["Manu"]
-description = "A GTK4 battery manager application for Linux"
+description = "A GTK4 battery manager application for Linux with peripheral battery support"
 license = "MIT"
 
 [dependencies]

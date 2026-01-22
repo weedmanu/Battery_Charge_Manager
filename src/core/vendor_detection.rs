@@ -6,7 +6,7 @@
 use std::fs;
 
 /// Laptop vendor types with different battery control interfaces
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VendorType {
     Asus,
     Lenovo, // ThinkPad
@@ -46,7 +46,7 @@ impl VendorInfo {
     ///
     /// # Returns
     ///
-    /// VendorInfo with manufacturer, product name, and threshold support flags
+    /// `VendorInfo` with manufacturer, product name, and threshold support flags
     pub fn detect() -> Self {
         let manufacturer = Self::read_dmi("sys_vendor")
             .unwrap_or_else(|| "Unknown".to_string())
@@ -56,6 +56,12 @@ impl VendorInfo {
 
         let vendor_type = Self::identify_vendor(&manufacturer, &product);
         let threshold_files = Self::get_threshold_files(&vendor_type);
+
+        if crate::core::debug::is_debug_enabled() {
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🏭 [VENDOR] manufacturer={manufacturer} product={product} vendor_type={vendor_type:?}"
+            ));
+        }
 
         // Vérifier le support réel des fichiers
         let supports_start = threshold_files
@@ -67,8 +73,14 @@ impl VendorInfo {
             .iter()
             .any(|p| fs::metadata(p).is_ok());
 
-        VendorInfo {
-            manufacturer: manufacturer.clone(),
+        if crate::core::debug::is_debug_enabled() {
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🎯 [VENDOR] supports_start={supports_start} supports_stop={supports_stop}"
+            ));
+        }
+
+        Self {
+            manufacturer,
             product_name: product,
             supports_start_threshold: supports_start,
             supports_stop_threshold: supports_stop,
@@ -79,14 +91,14 @@ impl VendorInfo {
     ///
     /// # Arguments
     ///
-    /// * `field` - DMI field name (e.g., "sys_vendor", "product_name")
+    /// * `field` - DMI field name (e.g., "`sys_vendor`", "`product_name`")
     ///
     /// # Returns
     ///
     /// * `Some(String)` - DMI field value (trimmed)
     /// * `None` - Field doesn't exist or read error
     fn read_dmi(field: &str) -> Option<String> {
-        fs::read_to_string(format!("/sys/class/dmi/id/{}", field))
+        fs::read_to_string(format!("/sys/class/dmi/id/{field}"))
             .ok()
             .map(|s| s.trim().to_string())
     }
@@ -100,7 +112,7 @@ impl VendorInfo {
     ///
     /// # Returns
     ///
-    /// Corresponding VendorType enum variant
+    /// Corresponding `VendorType` enum variant
     fn identify_vendor(manufacturer: &str, product: &str) -> VendorType {
         // ASUS
         if manufacturer.contains("asus") || manufacturer.contains("asustek") {
@@ -173,173 +185,81 @@ impl VendorInfo {
     ///
     /// # Returns
     ///
-    /// ThresholdFiles with start and stop paths for the vendor
+    /// `ThresholdFiles` with start and stop paths for the vendor
     fn get_threshold_files(vendor: &VendorType) -> ThresholdFiles {
-        let battery_base = "/sys/class/power_supply";
+        let base = "/sys/class/power_supply";
+
+        // Helper to generate battery paths
+        let bat_paths = |batteries: &[&str], suffix: &str| {
+            batteries
+                .iter()
+                .map(|b| format!("{base}/{b}/{suffix}"))
+                .collect()
+        };
 
         match vendor {
-            VendorType::Asus => {
-                // ASUS: généralement seul charge_control_end_threshold
+            VendorType::Asus => ThresholdFiles {
+                start_paths: vec![],
+                stop_paths: bat_paths(
+                    &["BAT0", "BAT1", "BATC", "BATT"],
+                    "charge_control_end_threshold",
+                ),
+            },
+            VendorType::Lenovo => ThresholdFiles {
+                start_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_start_threshold")
+                    .into_iter()
+                    .chain(bat_paths(&["BAT0", "BAT1"], "charge_start_threshold"))
+                    .collect(),
+                stop_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_end_threshold")
+                    .into_iter()
+                    .chain(bat_paths(&["BAT0", "BAT1"], "charge_stop_threshold"))
+                    .collect(),
+            },
+            VendorType::Dell | VendorType::System76 | VendorType::Tuxedo | VendorType::Msi => {
                 ThresholdFiles {
-                    start_paths: vec![],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                        format!("{}/BATC/charge_control_end_threshold", battery_base),
-                        format!("{}/BATT/charge_control_end_threshold", battery_base),
-                    ],
+                    start_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_start_threshold"),
+                    stop_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_end_threshold"),
                 }
             }
-
-            VendorType::Lenovo => {
-                // ThinkPad: support complet start/stop (kernel 5.9+)
-                ThresholdFiles {
-                    start_paths: vec![
-                        format!("{}/BAT0/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT0/charge_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_start_threshold", battery_base),
-                    ],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT0/charge_stop_threshold", battery_base),
-                        format!("{}/BAT1/charge_stop_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Dell => {
-                // Dell: support start/stop (kernel 6.12+)
-                ThresholdFiles {
-                    start_paths: vec![
-                        format!("{}/BAT0/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_start_threshold", battery_base),
-                    ],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Huawei => {
-                // Huawei: fichier unique combiné
-                ThresholdFiles {
-                    start_paths: vec![
-                        "/sys/devices/platform/huawei-wmi/charge_control_thresholds".to_string()
-                    ],
-                    stop_paths: vec![
-                        "/sys/devices/platform/huawei-wmi/charge_control_thresholds".to_string()
-                    ],
-                }
-            }
-
-            VendorType::System76 | VendorType::Tuxedo => {
-                // System76 & Tuxedo: support start/stop
-                ThresholdFiles {
-                    start_paths: vec![
-                        format!("{}/BAT0/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_start_threshold", battery_base),
-                    ],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Samsung => {
-                // Samsung: Battery Life Extender (0/1)
-                ThresholdFiles {
-                    start_paths: vec![],
-                    stop_paths: vec![
-                        format!("{}/BAT0/battery_care_limit", battery_base),
-                        format!("{}/BAT1/battery_care_limit", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Sony => {
-                // Sony: battery_care_limiter
-                ThresholdFiles {
-                    start_paths: vec![],
-                    stop_paths: vec![
-                        format!("{}/BAT0/battery_care_limiter", battery_base),
-                        format!("{}/BAT1/battery_care_limiter", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Lg => {
-                // LG: battery_care_limit
-                ThresholdFiles {
-                    start_paths: vec![],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Msi => {
-                // MSI: support start/stop
-                ThresholdFiles {
-                    start_paths: vec![
-                        format!("{}/BAT0/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_start_threshold", battery_base),
-                    ],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Toshiba => {
-                // Toshiba: stop seulement
-                ThresholdFiles {
-                    start_paths: vec![],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                    ],
-                }
-            }
-
-            VendorType::Macbook => {
-                // Macbook: support start/stop (avec macsmc-battery)
-                ThresholdFiles {
-                    start_paths: vec![format!(
-                        "{}/macsmc-battery/charge_control_start_threshold",
-                        battery_base
-                    )],
-                    stop_paths: vec![format!(
-                        "{}/macsmc-battery/charge_control_end_threshold",
-                        battery_base
-                    )],
-                }
-            }
-
-            VendorType::Generic => {
-                // Générique: cherche tous les chemins possibles
-                ThresholdFiles {
-                    start_paths: vec![
-                        format!("{}/BAT0/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_start_threshold", battery_base),
-                        format!("{}/BAT0/charge_start_threshold", battery_base),
-                        format!("{}/BAT1/charge_start_threshold", battery_base),
-                    ],
-                    stop_paths: vec![
-                        format!("{}/BAT0/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_control_end_threshold", battery_base),
-                        format!("{}/BAT0/charge_stop_threshold", battery_base),
-                        format!("{}/BAT1/charge_stop_threshold", battery_base),
-                        format!("{}/BAT0/charge_end_threshold", battery_base),
-                        format!("{}/BAT1/charge_end_threshold", battery_base),
-                    ],
-                }
-            }
+            VendorType::Huawei => ThresholdFiles {
+                start_paths: vec![
+                    "/sys/devices/platform/huawei-wmi/charge_control_thresholds".to_string()
+                ],
+                stop_paths: vec![
+                    "/sys/devices/platform/huawei-wmi/charge_control_thresholds".to_string()
+                ],
+            },
+            VendorType::Samsung => ThresholdFiles {
+                start_paths: vec![],
+                stop_paths: bat_paths(&["BAT0", "BAT1"], "battery_care_limit"),
+            },
+            VendorType::Sony => ThresholdFiles {
+                start_paths: vec![],
+                stop_paths: bat_paths(&["BAT0", "BAT1"], "battery_care_limiter"),
+            },
+            VendorType::Lg | VendorType::Toshiba => ThresholdFiles {
+                start_paths: vec![],
+                stop_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_end_threshold"),
+            },
+            VendorType::Macbook => ThresholdFiles {
+                start_paths: vec![format!(
+                    "{base}/macsmc-battery/charge_control_start_threshold"
+                )],
+                stop_paths: vec![format!(
+                    "{base}/macsmc-battery/charge_control_end_threshold"
+                )],
+            },
+            VendorType::Generic => ThresholdFiles {
+                start_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_start_threshold")
+                    .into_iter()
+                    .chain(bat_paths(&["BAT0", "BAT1"], "charge_start_threshold"))
+                    .collect(),
+                stop_paths: bat_paths(&["BAT0", "BAT1"], "charge_control_end_threshold")
+                    .into_iter()
+                    .chain(bat_paths(&["BAT0", "BAT1"], "charge_stop_threshold"))
+                    .chain(bat_paths(&["BAT0", "BAT1"], "charge_end_threshold"))
+                    .collect(),
+            },
         }
     }
 }
@@ -405,8 +325,8 @@ mod tests {
     #[test]
     fn test_threshold_files_asus() {
         let files = VendorInfo::get_threshold_files(&VendorType::Asus);
-        assert!(files.start_paths.is_empty()); // ASUS: pas de start threshold
-        assert!(!files.stop_paths.is_empty()); // ASUS: stop threshold supporté
+        assert!(files.start_paths.is_empty()); // ASUS: no start threshold
+        assert!(!files.stop_paths.is_empty()); // ASUS: stop threshold supported
     }
 
     #[test]
@@ -431,10 +351,10 @@ mod tests {
     #[test]
     fn test_vendor_detection_returns_valid_info() {
         let info = VendorInfo::detect();
-        // Vérifie que la détection retourne toujours quelque chose
+        // Verify detection always returns something
         assert!(!info.manufacturer.is_empty());
         assert!(!info.product_name.is_empty());
-        // Au moins un des deux devrait être supporté sur un système moderne
-        // (ou les deux peuvent être false sur système sans support batterie)
+        // At least one should be supported on modern systems
+        // (or both can be false on systems without battery support)
     }
 }

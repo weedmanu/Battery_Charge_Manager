@@ -65,13 +65,15 @@ fn main() {
         match arg.as_str() {
             "--debug" => {
                 core::debug::enable_debug();
-                eprintln!("[DEBUG] Debug mode enabled");
+                crate::core::debug::debug_log("🚀 [MAIN] Debug mode enabled");
             }
             arg if arg.starts_with("--lang=") => {
                 let lang = &arg[7..];
                 core::i18n::set_language(lang);
                 if core::debug::is_debug_enabled() {
-                    eprintln!("[DEBUG] Language set to: {}", lang);
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "🌐 [MAIN] Language set to: {lang}"
+                    ));
                 }
             }
             "--help" | "-h" => {
@@ -91,8 +93,11 @@ fn main() {
         }
     }
 
-    debug!("Starting Battery Manager application");
-    debug!("Current language: {}", core::i18n::get_language());
+    crate::core::debug::debug_log("🚀 [MAIN] Starting Battery Manager application");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🌐 [MAIN] Current language: {}",
+        core::i18n::get_language()
+    ));
 
     // The application starts without root privileges
     // pkexec will be requested only when clicking "Apply settings"
@@ -100,6 +105,6 @@ fn main() {
 
     app.connect_activate(ui::build_ui);
 
-    debug!("Running GTK4 application");
+    crate::core::debug::debug_log("🖥️ [MAIN] Running GTK4 application");
     app.run_with_args(&gtk_args);
 }

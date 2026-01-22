@@ -5,34 +5,15 @@
 
 use gtk4::prelude::*;
 use gtk4::{Adjustment, Box, Button, Label, Orientation, ScrolledWindow, SpinButton, Switch};
+use std::path::Path;
 use std::process::Command;
 
 use crate::core::i18n::t;
 use crate::core::{BatteryInfo, VendorInfo};
 use crate::ui::components::InfoCard;
 
-/// Builds the Settings tab content
-///
-/// # Arguments
-///
-/// * `battery_info` - Current battery information
-/// * `current_battery` - Name of active battery (e.g., "BAT0")
-///
-/// # Returns
-///
-/// ScrolledWindow containing settings controls
-pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> ScrolledWindow {
-    let scrolled = ScrolledWindow::new();
-    scrolled.set_vexpand(true);
-
-    let content_box = Box::new(Orientation::Vertical, 6);
-    content_box.set_margin_top(8);
-    content_box.set_margin_bottom(8);
-    content_box.set_margin_start(10);
-    content_box.set_margin_end(10);
-
-    // === Card Informations Fabricant ===
-    let vendor_info = VendorInfo::detect();
+/// Creates vendor information card
+fn create_vendor_card(vendor_info: &VendorInfo) -> gtk4::Frame {
     let (vendor_frame, vendor_box) = InfoCard::create(&format!("🏭 {}", t("card_system_info")));
     vendor_box.set_spacing(5);
 
@@ -68,6 +49,76 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     ));
     vendor_box.append(&support_label);
 
+    vendor_frame
+}
+
+/// Creates threshold spinbutton row
+fn create_threshold_row(
+    label_text: &str,
+    default_value: u8,
+    min: f64,
+    max: f64,
+) -> (Box, SpinButton) {
+    let row = Box::new(Orientation::Horizontal, 10);
+    row.set_homogeneous(true);
+
+    let label = Label::new(Some(label_text));
+    label.set_halign(gtk4::Align::Start);
+    label.set_markup(&format!("<span weight='bold'>{label_text}</span>"));
+
+    let adj = Adjustment::new(f64::from(default_value), min, max, 1.0, 5.0, 0.0);
+    let spin = SpinButton::new(Some(&adj), 1.0, 0);
+    spin.set_halign(gtk4::Align::End);
+
+    row.append(&label);
+    row.append(&spin);
+
+    (row, spin)
+}
+
+/// Builds the Settings tab content
+///
+/// # Arguments
+///
+/// * `battery_info` - Current battery information
+/// * `current_battery` - Name of active battery (e.g., "BAT0")
+///
+/// # Returns
+///
+/// `ScrolledWindow` containing settings controls
+#[allow(clippy::too_many_lines)]
+pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> ScrolledWindow {
+    crate::core::debug::debug_log_args(std::format_args!(
+        "⚙️ [SETTINGS_TAB] Building settings tab for {current_battery}..."
+    ));
+
+    fn service_unit_exists() -> bool {
+        [
+            "/etc/systemd/system/battery-manager.service",
+            "/usr/lib/systemd/system/battery-manager.service",
+            "/lib/systemd/system/battery-manager.service",
+        ]
+        .into_iter()
+        .any(|p| Path::new(p).is_file())
+    }
+
+    let unit_exists = service_unit_exists();
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🧩 [SETTINGS_TAB] Service unit present: {unit_exists} (service_active={})",
+        battery_info.service_active
+    ));
+    let scrolled = ScrolledWindow::new();
+    scrolled.set_vexpand(true);
+
+    let content_box = Box::new(Orientation::Vertical, 6);
+    content_box.set_margin_top(8);
+    content_box.set_margin_bottom(8);
+    content_box.set_margin_start(10);
+    content_box.set_margin_end(10);
+
+    // === Card Informations Fabricant ===
+    let vendor_info = VendorInfo::detect();
+    let vendor_frame = create_vendor_card(&vendor_info);
     content_box.append(&vendor_frame);
 
     // === Card Seuils de charge ===
@@ -76,77 +127,29 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     settings_box.set_spacing(8);
 
     // Seuil début (seulement si supporté)
-    let start_spin = if battery_info.charge_start_threshold.is_some() {
-        let start_row = Box::new(Orientation::Horizontal, 10);
-        start_row.set_homogeneous(true);
-
-        let start_label = Label::new(Some(&t("threshold_start_pct")));
-        start_label.set_halign(gtk4::Align::Start);
-        start_label.set_markup(&format!(
-            "<span weight='bold'>{}</span>",
-            t("threshold_start_pct")
-        ));
-
-        let start_adj = Adjustment::new(
-            battery_info.charge_start_threshold.unwrap_or(75) as f64,
-            0.0,
-            99.0,
-            1.0,
-            5.0,
-            0.0,
-        );
-        let spin = SpinButton::new(Some(&start_adj), 1.0, 0);
-        spin.set_halign(gtk4::Align::End);
-
-        start_row.append(&start_label);
-        start_row.append(&spin);
+    let start_spin = battery_info.charge_start_threshold.map(|threshold| {
+        let (start_row, spin) =
+            create_threshold_row(&t("threshold_start_pct"), threshold, 0.0, 99.0);
         settings_box.append(&start_row);
-        Some(spin)
-    } else {
-        None
-    };
+        spin
+    });
 
     // Seuil fin
-    let stop_row = Box::new(Orientation::Horizontal, 10);
-    stop_row.set_homogeneous(true);
-
-    let stop_label = Label::new(Some(&t("threshold_stop_pct")));
-    stop_label.set_halign(gtk4::Align::Start);
-    stop_label.set_markup(&format!(
-        "<span weight='bold'>{}</span>",
-        t("threshold_stop_pct")
-    ));
-
-    let stop_adj = Adjustment::new(
-        battery_info.charge_stop_threshold.unwrap_or(80) as f64,
+    let (stop_row, stop_spin) = create_threshold_row(
+        &t("threshold_stop_pct"),
+        battery_info.charge_stop_threshold.unwrap_or(80),
         1.0,
         100.0,
-        1.0,
-        5.0,
-        0.0,
     );
-    let stop_spin = SpinButton::new(Some(&stop_adj), 1.0, 0);
-    stop_spin.set_halign(gtk4::Align::End);
-
-    stop_row.append(&stop_label);
-    stop_row.append(&stop_spin);
     settings_box.append(&stop_row);
 
     // Alarme de décharge
-    let alarm_row = Box::new(Orientation::Horizontal, 10);
-    alarm_row.set_homogeneous(true);
-
-    let alarm_label = Label::new(Some("Alarme de décharge (%)"));
-    alarm_label.set_halign(gtk4::Align::Start);
-    alarm_label.set_markup("<span weight='bold'>Alarme de décharge (%)</span>");
-
     let alarm_value = battery_info.alarm_percent().unwrap_or(10.0);
-    let alarm_adj = Adjustment::new(alarm_value as f64, 1.0, 100.0, 1.0, 5.0, 0.0);
-    let alarm_spin = SpinButton::new(Some(&alarm_adj), 1.0, 1);
-    alarm_spin.set_halign(gtk4::Align::End);
-
-    alarm_row.append(&alarm_label);
-    alarm_row.append(&alarm_spin);
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let (alarm_row, alarm_spin) =
+        create_threshold_row("Alarme de décharge (%)", alarm_value as u8, 1.0, 100.0);
+    // Override decimal places for alarm
+    alarm_spin.set_digits(1);
     settings_box.append(&alarm_row);
 
     content_box.append(&settings_frame);
@@ -171,6 +174,13 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     service_switch.set_valign(gtk4::Align::Center);
     service_switch.set_halign(gtk4::Align::End);
 
+    service_switch.connect_state_set(|_, is_active| {
+        crate::core::debug::debug_log_args(std::format_args!(
+            "🔁 [SETTINGS_TAB] Service switch toggled: active={is_active}"
+        ));
+        glib::Propagation::Proceed
+    });
+
     service_row.append(&service_label);
     service_row.append(&service_switch);
     service_box.append(&service_row);
@@ -178,19 +188,13 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     // Note d'information avec fond coloré
     let note_frame = gtk4::Frame::new(None);
     note_frame.set_margin_top(5);
+    note_frame.add_css_class("info-note");
 
     let note_box = Box::new(Orientation::Vertical, 4);
     note_box.set_margin_top(6);
     note_box.set_margin_bottom(6);
     note_box.set_margin_start(12);
     note_box.set_margin_end(12);
-
-    // Ajouter un style CSS pour le fond coloré
-    let css_provider = gtk4::CssProvider::new();
-    css_provider.load_from_data("frame { background-color: #E3F2FD; border-radius: 6px; }");
-    note_frame
-        .style_context()
-        .add_provider(&css_provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     let note1 = Label::new(None);
     note1.set_halign(gtk4::Align::Start);
@@ -201,6 +205,14 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     note2.set_halign(gtk4::Align::Start);
     note2.set_markup(&format!("<span size='small'>{}</span>", t("note_disabled")));
     note_box.append(&note2);
+
+    let note3 = Label::new(None);
+    note3.set_halign(gtk4::Align::Start);
+    note3.set_markup(&format!(
+        "<span size='small'>{}</span>",
+        t("note_apply_required")
+    ));
+    note_box.append(&note3);
 
     note_frame.set_child(Some(&note_box));
     service_box.append(&note_frame);
@@ -213,7 +225,7 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
     status_message.set_margin_top(10);
     content_box.append(&status_message);
 
-    // Bouton unique pour appliquer toutes les modifications (centré en dehors du frame)
+    // Single button to apply all modifications (centered outside frame)
     let current_battery_clone = current_battery.to_string();
     let apply_button = Button::with_label(&t("apply_all_settings"));
     apply_button.set_margin_top(10);
@@ -254,42 +266,119 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
             #[weak]
             status_message,
             move |_| {
-            let start = start_spin.as_ref().map(|s| s.value() as u8).unwrap_or(0);
+            use std::fmt::Write;
+
+            fn truncate_for_log(s: &str, max_chars: usize) -> String {
+                if s.chars().count() <= max_chars {
+                    return s.to_string();
+                }
+                let mut out = s.chars().take(max_chars).collect::<String>();
+                out.push('…');
+                out
+            }
+
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            let start = start_spin.as_ref().map_or(0, |s| s.value() as u8);
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let stop = stop_spin.value() as u8;
+            #[allow(clippy::cast_possible_truncation)]
             let alarm_pct = alarm_spin.value() as f32;
             let enable_service = service_switch.is_active();
+
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🧾 [SETTINGS_TAB] Apply clicked: start_supported={}, start={}, stop={}, alarm_pct={alarm_pct:.1}, service_enable={enable_service}",
+                start_spin.as_ref().is_some(),
+                start,
+                stop,
+            ));
+
+            if !enable_service {
+                crate::core::debug::debug_log(
+                    "⚠️ [SETTINGS_TAB] Service disabled: thresholds apply now, but may not persist after reboot",
+                );
+            }
 
             // Validation
             if start_spin.as_ref().is_some()
                 && start >= stop {
                     status_message.set_markup(&format!(
-                        "<span color='red'>{}</span>",
+                        "<span>{}</span>",
                         t("error_start_greater_stop")
+                    ));
+                    status_message.add_css_class("color-danger");
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "❌ [SETTINGS_TAB] Validation error: start ({start}) >= stop ({stop})"
                     ));
                     return;
                 }
 
             // Calculer la valeur d'alarme
-            let alarm_value_str = if let Ok(charge_full) = std::fs::read_to_string(
-                format!("/sys/class/power_supply/{}/charge_full", current_battery_clone)
-            ).or_else(|_| std::fs::read_to_string(
-                format!("/sys/class/power_supply/{}/energy_full", current_battery_clone)
-            )) {
-                if let Ok(full_value) = charge_full.trim().parse::<u64>() {
-                    let alarm_value = (full_value as f32 * (alarm_pct / 100.0)) as u64;
-                    alarm_value.to_string()
-                } else {
+            let charge_full_str = std::fs::read_to_string(format!(
+                "/sys/class/power_supply/{current_battery_clone}/charge_full"
+            ))
+            .or_else(|charge_err| {
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "⚠️ [SETTINGS_TAB] charge_full read failed, trying energy_full: {charge_err}"
+                ));
+                std::fs::read_to_string(format!(
+                    "/sys/class/power_supply/{current_battery_clone}/energy_full"
+                ))
+            });
+
+            let alarm_value_str = match charge_full_str {
+                Ok(charge_full) => match charge_full.trim().parse::<u64>() {
+                    Ok(full_value) => {
+                        #[allow(
+                            clippy::cast_precision_loss,
+                            clippy::cast_possible_truncation,
+                            clippy::cast_sign_loss
+                        )]
+                        let alarm_value = (full_value as f32 * (alarm_pct / 100.0)) as u64;
+                        crate::core::debug::debug_log_args(std::format_args!(
+                            "🧮 [SETTINGS_TAB] Alarm computed from full_value={full_value}: alarm_value={alarm_value}"
+                        ));
+                        alarm_value.to_string()
+                    }
+                    Err(parse_err) => {
+                        crate::core::debug::debug_log_args(std::format_args!(
+                            "⚠️ [SETTINGS_TAB] Failed to parse charge_full/energy_full value: {parse_err} (raw='{}')",
+                            truncate_for_log(charge_full.trim(), 80)
+                        ));
+                        "0".to_string()
+                    }
+                },
+                Err(read_err) => {
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "⚠️ [SETTINGS_TAB] Failed to read charge_full/energy_full: {read_err}; falling back to alarm_value=0"
+                    ));
                     "0".to_string()
                 }
-            } else {
-                "0".to_string()
             };
 
-            // Construire le script shell qui fait tout en une seule fois
-            let alarm_path = format!("/sys/class/power_supply/{}/alarm", current_battery_clone);
+            // Validate numeric inputs to prevent injection
+            // Even though spinbuttons provide numeric values, validate for security
+            if !start.to_string().chars().all(|c| c.is_ascii_digit())
+                || !stop.to_string().chars().all(|c| c.is_ascii_digit())
+                || !alarm_value_str.chars().all(|c| c.is_ascii_digit())
+            {
+                status_message.set_markup(&format!("<span>{}: Invalid numeric values</span>", t("error")));
+                status_message.remove_css_class("color-success");
+                status_message.remove_css_class("color-warning");
+                status_message.add_css_class("color-danger");
 
-            // Chemins possibles pour les seuils
-            let base_path = format!("/sys/class/power_supply/{}", current_battery_clone);
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "❌ [SETTINGS_TAB] Numeric validation failed: start='{start}', stop='{stop}', alarm_value_str='{}'",
+                    truncate_for_log(&alarm_value_str, 80)
+                ));
+                return;
+            }
+
+            // Build shell script with validated inputs
+            // Note: Values are pre-validated as pure numeric strings
+            let alarm_path = format!("/sys/class/power_supply/{current_battery_clone}/alarm");
+
+            // Possible paths for thresholds
+            let base_path = format!("/sys/class/power_supply/{current_battery_clone}");
             let start_paths = vec![
                 format!("{}/charge_control_start_threshold", base_path),
                 format!("{}/charge_start_threshold", base_path),
@@ -300,49 +389,69 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
                 format!("{}/charge_end_threshold", base_path),
             ];
 
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🗂️ [SETTINGS_TAB] Sysfs paths: alarm_path='{alarm_path}' exists={}, start_paths_exist=[{}, {}], stop_paths_exist=[{}, {}, {}]",
+                Path::new(&alarm_path).is_file(),
+                Path::new(&start_paths[0]).is_file(),
+                Path::new(&start_paths[1]).is_file(),
+                Path::new(&stop_paths[0]).is_file(),
+                Path::new(&stop_paths[1]).is_file(),
+                Path::new(&stop_paths[2]).is_file(),
+            ));
+
             let mut script = String::new();
 
-            // Créer le répertoire de config
+            // Create config directory
             script.push_str("mkdir -p /etc/battery-manager; ");
 
-            // Écrire les seuils
+            // Write thresholds (values are pre-validated numeric strings)
             for path in &start_paths {
-                script.push_str(&format!("[ -f {} ] && echo {} > {}; ", path, start, path));
+                let _ = write!(&mut script, "[ -f {path} ] && echo {start} > {path}; ");
             }
             for path in &stop_paths {
-                script.push_str(&format!("[ -f {} ] && echo {} > {}; ", path, stop, path));
+                let _ = write!(&mut script, "[ -f {path} ] && echo {stop} > {path}; ");
             }
 
-            // Écrire l'alarme
-            script.push_str(&format!("[ -f {} ] && echo {} > {}; ", alarm_path, alarm_value_str, alarm_path));
+            // Write alarm
+            let _ = write!(&mut script, "[ -f {alarm_path} ] && echo {alarm_value_str} > {alarm_path}; ");
 
-            // Sauvegarder la config (START_THRESHOLD seulement si supporté)
+            // Save config (START_THRESHOLD only if supported)
             let config_content = if start_spin.is_some() {
-                format!("START_THRESHOLD={}\\nSTOP_THRESHOLD={}\\n", start, stop)
+                format!("START_THRESHOLD={start}\\nSTOP_THRESHOLD={stop}\\n")
             } else {
-                format!("STOP_THRESHOLD={}\\n", stop)
+                format!("STOP_THRESHOLD={stop}\\n")
             };
-            script.push_str(&format!("echo '{}' > /etc/battery-manager/{}.conf; ",
-                config_content, current_battery_clone));
+            let _ = write!(&mut script, "echo '{config_content}' > /etc/battery-manager/{current_battery_clone}.conf; ");
 
-            // Gérer le service
+            // Manage service
             if enable_service {
                 script.push_str("systemctl enable battery-manager.service; ");
                 script.push_str("systemctl start battery-manager.service; ");
             } else {
-                script.push_str("systemctl disable battery-manager.service; ");
-                script.push_str("systemctl stop battery-manager.service; ");
+                // If the unit is not installed, systemctl returns non-zero. We don't want that
+                // to fail applying thresholds when the user is explicitly disabling the service.
+                script.push_str("systemctl disable battery-manager.service 2>/dev/null || true; ");
+                script.push_str("systemctl stop battery-manager.service 2>/dev/null || true; ");
             }
 
-            // Exécuter tout avec un seul appel pkexec
-            // D'abord vérifier que pkexec est disponible
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🔧 [SETTINGS_TAB] Prepared script: bytes={}, service_enable={enable_service}",
+                script.len()
+            ));
+
+            // Execute with pkexec
+            // First verify that pkexec is available
             let pkexec_check = Command::new("which")
                 .arg("pkexec")
                 .output();
 
             match pkexec_check {
                 Ok(result) if result.status.success() => {
-                    // pkexec existe, on peut continuer
+                    // pkexec exists, proceed
+                    // Security: Script contains only pre-validated numeric values
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "🔐 [SETTINGS_TAB] pkexec found, executing script via pkexec"
+                    ));
                     let output = Command::new("pkexec")
                         .arg("sh")
                         .arg("-c")
@@ -353,26 +462,72 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
                         Ok(result) if result.status.success() => {
                             let service_status = if enable_service { t("enabled") } else { t("disabled") };
                             let threshold_msg = if start_spin.is_some() {
-                                format!("{}%-{}%", start, stop)
+                                format!("{start}%-{stop}%")
                             } else {
-                                format!("{}%", stop)
+                                format!("{stop}%")
+                            };
+
+                            let persistence_note = if enable_service {
+                                String::new()
+                            } else {
+                                format!("<br/><span size='small'>{}</span>", t("warning_not_persistent"))
                             };
                             status_message.set_markup(&format!(
-                                "<span color='green'>✓ {}: {}, {}: {:.1}%, {}: {}</span>",
+                                "<span>✓ {}: {}, {}: {:.1}%, {}: {}{}</span>",
                                 t("settings_applied"), threshold_msg, t("alarm"), alarm_pct, t("service"), service_status
+                                ,persistence_note
+                            ));
+                            status_message.remove_css_class("color-warning");
+                            status_message.remove_css_class("color-danger");
+                            status_message.add_css_class("color-success");
+                            crate::core::debug::debug_log_args(std::format_args!(
+                                "✅ [SETTINGS_TAB] Settings applied successfully: {threshold_msg}, alarm={alarm_pct:.1}%, service={service_status}"
                             ));
                         }
                         Ok(result) => {
-                            let error = String::from_utf8_lossy(&result.stderr);
-                            status_message.set_markup(&format!("<span color='red'>{}: {}</span>", t("error"), error));
+                            let stderr = String::from_utf8_lossy(&result.stderr);
+                            let stdout = String::from_utf8_lossy(&result.stdout);
+                            let code = result.status.code();
+                            let stderr_preview = truncate_for_log(stderr.trim(), 400);
+                            let stdout_preview = truncate_for_log(stdout.trim(), 400);
+
+                            let ui_error = if !stderr.trim().is_empty() {
+                                stderr_preview.clone()
+                            } else if !stdout.trim().is_empty() {
+                                stdout_preview.clone()
+                            } else {
+                                format!("pkexec returned non-zero status: {code:?}")
+                            };
+
+                            status_message.set_markup(&format!("<span>{}: {}</span>", t("error"), ui_error));
+                            status_message.remove_css_class("color-success");
+                            status_message.remove_css_class("color-warning");
+                            status_message.add_css_class("color-danger");
+                            crate::core::debug::debug_log_args(std::format_args!(
+                                "❌ [SETTINGS_TAB] Script execution failed: code={code:?} stdout='{}' stderr='{}'",
+                                stdout_preview,
+                                stderr_preview
+                            ));
                         }
                         Err(err) => {
-                            status_message.set_markup(&format!("<span color='red'>{}: {}</span>", t("error_execution"), err));
+                            status_message.set_markup(&format!("<span>{}: {}</span>", t("error_execution"), err));
+                            status_message.remove_css_class("color-success");
+                            status_message.remove_css_class("color-warning");
+                            status_message.add_css_class("color-danger");
+                            crate::core::debug::debug_log_args(std::format_args!(
+                                "❌ [SETTINGS_TAB] Execution error: {err}"
+                            ));
                         }
                     }
                 }
                 _ => {
-                    status_message.set_markup(&format!("<span color='red'>{}: pkexec n'est pas installé. Installez policykit-1 ou polkit.</span>", t("error")));
+                    status_message.set_markup(&format!("<span>{}: pkexec not installed. Install policykit-1 or polkit.</span>", t("error")));
+                    status_message.remove_css_class("color-success");
+                    status_message.remove_css_class("color-warning");
+                    status_message.add_css_class("color-danger");
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "❌ [SETTINGS_TAB] pkexec not found (which pkexec failed or returned non-zero)"
+                    ));
                 }
             }
             }

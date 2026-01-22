@@ -23,22 +23,19 @@ impl InfoCard {
         let frame = Frame::new(None);
 
         let main_box = Box::new(Orientation::Vertical, 0);
-        main_box.set_margin_top(6);
-        main_box.set_margin_bottom(6);
-        main_box.set_margin_start(8);
-        main_box.set_margin_end(8);
+        main_box.set_margin_top(4);
+        main_box.set_margin_bottom(4);
+        main_box.set_margin_start(6);
+        main_box.set_margin_end(6);
 
-        // Créer le titre en gras et plus grand
+        // Create bold and larger title
         let title_label = Label::new(None);
-        title_label.set_markup(&format!(
-            "<span size='large' weight='bold'>{}</span>",
-            title
-        ));
+        title_label.set_markup(&format!("<span size='large' weight='bold'>{title}</span>"));
         title_label.set_halign(gtk4::Align::Start);
-        title_label.set_margin_bottom(8);
+        title_label.set_margin_bottom(4);
         main_box.append(&title_label);
 
-        let content_box = Box::new(Orientation::Vertical, 4);
+        let content_box = Box::new(Orientation::Vertical, 2);
         main_box.append(&content_box);
 
         frame.set_child(Some(&main_box));
@@ -91,6 +88,7 @@ pub fn create_row_grid() -> Grid {
     grid.set_row_homogeneous(true);
     grid
 }
+
 /// Creates vertical expanding spacer
 ///
 /// # Returns

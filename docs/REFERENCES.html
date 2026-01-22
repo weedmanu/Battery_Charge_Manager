@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battery Manager — References</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <input class="docs-toggle" type="radio" name="lang" id="lang-fr" checked />
+  <input class="docs-toggle" type="radio" name="lang" id="lang-en" />
+
+  <input class="docs-toggle" type="radio" name="theme" id="theme-auto" checked />
+  <input class="docs-toggle" type="radio" name="theme" id="theme-light" />
+  <input class="docs-toggle" type="radio" name="theme" id="theme-dark" />
+
+  <div class="app">
+    <div class="layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <div class="brand">
+          <img src="icon.png" alt="Battery Manager" />
+          <div>
+            <div class="title">Battery Manager</div>
+            <div class="subtitle">Docs • menu • FR/EN • thème</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control-group">
+            <div class="label">Langue / Language</div>
+            <div class="pills" role="group" aria-label="Language">
+              <label class="pill" for="lang-fr">FR</label>
+              <label class="pill" for="lang-en">EN</label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="label">Thème / Theme</div>
+            <div class="pills" role="group" aria-label="Theme">
+              <label class="pill" for="theme-auto">Auto</label>
+              <label class="pill" for="theme-light">Clair</label>
+              <label class="pill" for="theme-dark">Sombre</label>
+            </div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Pages">
+          <div class="nav-title">Pages</div>
+          <a href="README.html">README</a>
+<a href="REFERENCES.html" aria-current="page">References</a>
+
+          <div class="nav-title">Sommaire</div>
+          <div class="toc-fr"><div class="toc">
+<ul>
+<li><a href="#references-rust-gtk4-fr">Références Rust &amp; GTK4 (FR)</a><ul>
+<li><a href="#1-documentation-officielle">1) Documentation officielle</a></li>
+<li><a href="#2-commandes-cargo-quotidien">2) Commandes Cargo (quotidien)</a><ul>
+<li><a href="#nettoyage">Nettoyage</a></li>
+<li><a href="#build-run">Build / Run</a></li>
+<li><a href="#tests">Tests</a></li>
+<li><a href="#qualite">Qualité</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#dependances">Dépendances</a></li>
+</ul>
+</li>
+<li><a href="#3-clippy-niveaux-aaa">3) Clippy : niveaux “AAA”</a><ul>
+<li><a href="#basique">Basique</a></li>
+<li><a href="#strict-pedantic">Strict (pedantic)</a></li>
+<li><a href="#experimental-nursery">Expérimental (nursery)</a></li>
+<li><a href="#refuser-les-warnings">Refuser les warnings</a></li>
+<li><a href="#check-aaa-recommande">Check AAA (recommandé)</a></li>
+</ul>
+</li>
+<li><a href="#4-fixes-clippy-courants">4) Fixes Clippy courants</a><ul>
+<li><a href="#litteraux-illisibles">Littéraux illisibles</a></li>
+<li><a href="#clones-inutiles">Clones inutiles</a></li>
+<li><a href="#docs-manquantes">Docs manquantes</a></li>
+</ul>
+</li>
+<li><a href="#5-developpement-gtk4-linux">5) Développement GTK4 (Linux)</a><ul>
+<li><a href="#dependances-debianubuntu">Dépendances Debian/Ubuntu</a></li>
+<li><a href="#debug-gtk">Debug GTK</a></li>
+</ul>
+</li>
+<li><a href="#6-outils-systeme-utiles-projet">6) Outils système utiles (projet)</a><ul>
+<li><a href="#arborescence">Arborescence</a></li>
+<li><a href="#compter-les-lignes-de-code">Compter les lignes de code</a></li>
+<li><a href="#recherche-rapide-ripgrep">Recherche rapide (ripgrep)</a></li>
+</ul>
+</li>
+<li><a href="#7-systemd-service-de-restauration">7) systemd : service de restauration</a></li>
+<li><a href="#8-pkexec-policykit">8) pkexec / PolicyKit</a></li>
+<li><a href="#9-sysfs-verification-compatibilite-seuils">9) sysfs : vérification compatibilité seuils</a></li>
+<li><a href="#10-packaging-deb">10) Packaging (.deb)</a></li>
+<li><a href="#11-workflow-essentiel">11) Workflow essentiel</a></li>
+<li><a href="#12-exemple-cargotoml">12) Exemple Cargo.toml</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+          <div class="toc-en"><div class="toc">
+<ul>
+<li><a href="#rust-gtk4-references-en">Rust &amp; GTK4 References (EN)</a><ul>
+<li><a href="#1-official-documentation">1) Official documentation</a></li>
+<li><a href="#2-cargo-commands-daily">2) Cargo commands (daily)</a><ul>
+<li><a href="#cleanup">Cleanup</a></li>
+<li><a href="#build-run">Build / Run</a></li>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#quality">Quality</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+<li><a href="#3-clippy-aaa-levels">3) Clippy “AAA” levels</a><ul>
+<li><a href="#basic">Basic</a></li>
+<li><a href="#strict-pedantic">Strict (pedantic)</a></li>
+<li><a href="#experimental-nursery">Experimental (nursery)</a></li>
+<li><a href="#deny-warnings">Deny warnings</a></li>
+<li><a href="#aaa-check-recommended">AAA check (recommended)</a></li>
+</ul>
+</li>
+<li><a href="#4-common-clippy-fixes">4) Common Clippy fixes</a><ul>
+<li><a href="#unreadable-literals">Unreadable literals</a></li>
+<li><a href="#unnecessary-clones">Unnecessary clones</a></li>
+<li><a href="#missing-docs">Missing docs</a></li>
+</ul>
+</li>
+<li><a href="#5-gtk4-development-linux">5) GTK4 development (Linux)</a><ul>
+<li><a href="#debianubuntu-dependencies">Debian/Ubuntu dependencies</a></li>
+<li><a href="#gtk-debugging">GTK debugging</a></li>
+</ul>
+</li>
+<li><a href="#6-useful-system-tools-project">6) Useful system tools (project)</a><ul>
+<li><a href="#directory-tree">Directory tree</a></li>
+<li><a href="#count-lines-of-code">Count lines of code</a></li>
+<li><a href="#fast-search-ripgrep">Fast search (ripgrep)</a></li>
+</ul>
+</li>
+<li><a href="#7-systemd-restore-service">7) systemd: restore service</a></li>
+<li><a href="#8-pkexec-policykit">8) pkexec / PolicyKit</a></li>
+<li><a href="#9-sysfs-threshold-compatibility-checks">9) sysfs: threshold compatibility checks</a></li>
+<li><a href="#10-packaging-deb">10) Packaging (.deb)</a></li>
+<li><a href="#11-essential-workflow">11) Essential workflow</a></li>
+<li><a href="#12-cargotoml-example">12) Cargo.toml example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <div class="lang lang-fr"><h1 id="references-rust-gtk4-fr">Références Rust &amp; GTK4 (FR)<a class="headerlink" href="#references-rust-gtk4-fr" title="Permanent link">&para;</a></h1>
+<h2 id="1-documentation-officielle">1) Documentation officielle<a class="headerlink" href="#1-documentation-officielle" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Rust (FR) : https://www.rust-lang.org/fr/</li>
+<li>Rust Book (EN) : https://doc.rust-lang.org/book/</li>
+<li>Cargo Book : https://doc.rust-lang.org/cargo/</li>
+<li>Rust API docs : https://doc.rust-lang.org/std/</li>
+<li>gtk-rs book (GTK4) : https://gtk-rs.org/gtk4-rs/stable/latest/book/</li>
+<li>GTK Docs : https://docs.gtk.org/</li>
+</ul>
+<h2 id="2-commandes-cargo-quotidien">2) Commandes Cargo (quotidien)<a class="headerlink" href="#2-commandes-cargo-quotidien" title="Permanent link">&para;</a></h2>
+<h3 id="nettoyage">Nettoyage<a class="headerlink" href="#nettoyage" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clean                 # Supprime target/
+</code></pre>
+<h3 id="build-run">Build / Run<a class="headerlink" href="#build-run" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo check                 # Vérification rapide (sans binaire)
+cargo build                 # Build debug
+cargo build --release       # Build optimisé
+
+cargo run                   # Build + run debug
+cargo run --release         # Build + run release
+cargo run -- --debug        # Passe des args au binaire
+</code></pre>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo test                  # Lance tous les tests
+cargo test -- --nocapture   # Affiche println!
+cargo test -- --test-threads=1  # Exécution séquentielle
+</code></pre>
+<h3 id="qualite">Qualité<a class="headerlink" href="#qualite" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo fmt                   # Formatage
+cargo clippy                # Linter
+cargo clippy --fix          # Auto-fix (prudence)
+</code></pre>
+<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo doc                   # Génère la doc
+cargo doc --open            # Génère + ouvre dans le navigateur
+</code></pre>
+<h3 id="dependances">Dépendances<a class="headerlink" href="#dependances" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo add &lt;crate&gt;           # Ajoute une dépendance
+cargo update                # Met à jour les dépendances
+cargo tree                  # Arbre des deps
+</code></pre>
+<h2 id="3-clippy-niveaux-aaa">3) Clippy : niveaux “AAA”<a class="headerlink" href="#3-clippy-niveaux-aaa" title="Permanent link">&para;</a></h2>
+<h3 id="basique">Basique<a class="headerlink" href="#basique" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy
+</code></pre>
+<h3 id="strict-pedantic">Strict (pedantic)<a class="headerlink" href="#strict-pedantic" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -W clippy::pedantic
+</code></pre>
+<h3 id="experimental-nursery">Expérimental (nursery)<a class="headerlink" href="#experimental-nursery" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -W clippy::nursery
+</code></pre>
+<h3 id="refuser-les-warnings">Refuser les warnings<a class="headerlink" href="#refuser-les-warnings" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -D warnings
+</code></pre>
+<h3 id="check-aaa-recommande">Check AAA (recommandé)<a class="headerlink" href="#check-aaa-recommande" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy --all-features --all-targets -- \
+  -W clippy::pedantic \
+  -W clippy::nursery
+</code></pre>
+<h2 id="4-fixes-clippy-courants">4) Fixes Clippy courants<a class="headerlink" href="#4-fixes-clippy-courants" title="Permanent link">&para;</a></h2>
+<h3 id="litteraux-illisibles">Littéraux illisibles<a class="headerlink" href="#litteraux-illisibles" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Avant
+let x = 4000000;
+
+// ✅ Après
+let x = 4_000_000;
+</code></pre>
+<h3 id="clones-inutiles">Clones inutiles<a class="headerlink" href="#clones-inutiles" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Avant
+let s = my_string.clone();
+
+// ✅ Après (si possible)
+let s = &amp;my_string;
+</code></pre>
+<h3 id="docs-manquantes">Docs manquantes<a class="headerlink" href="#docs-manquantes" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Avant
+pub fn calculate(x: i32) -&gt; i32 { x * 2 }
+
+// ✅ Après
+/// Multiplie l'entrée par 2
+pub fn calculate(x: i32) -&gt; i32 { x * 2 }
+</code></pre>
+<h2 id="5-developpement-gtk4-linux">5) Développement GTK4 (Linux)<a class="headerlink" href="#5-developpement-gtk4-linux" title="Permanent link">&para;</a></h2>
+<h3 id="dependances-debianubuntu">Dépendances Debian/Ubuntu<a class="headerlink" href="#dependances-debianubuntu" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">sudo apt update
+sudo apt install libgtk-4-dev build-essential policykit-1
+</code></pre>
+<h3 id="debug-gtk">Debug GTK<a class="headerlink" href="#debug-gtk" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">G_MESSAGES_DEBUG=all battery-manager --debug
+</code></pre>
+<h2 id="6-outils-systeme-utiles-projet">6) Outils système utiles (projet)<a class="headerlink" href="#6-outils-systeme-utiles-projet" title="Permanent link">&para;</a></h2>
+<h3 id="arborescence">Arborescence<a class="headerlink" href="#arborescence" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">tree -L 2 -I 'target' --dirsfirst
+</code></pre>
+<h3 id="compter-les-lignes-de-code">Compter les lignes de code<a class="headerlink" href="#compter-les-lignes-de-code" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cloc src/ --quiet
+</code></pre>
+<h3 id="recherche-rapide-ripgrep">Recherche rapide (ripgrep)<a class="headerlink" href="#recherche-rapide-ripgrep" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">rg &quot;pattern&quot; -n src/
+</code></pre>
+<h2 id="7-systemd-service-de-restauration">7) systemd : service de restauration<a class="headerlink" href="#7-systemd-service-de-restauration" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">systemctl status battery-manager.service
+systemctl restart battery-manager.service
+journalctl -u battery-manager.service -b --no-pager
+</code></pre>
+<h2 id="8-pkexec-policykit">8) pkexec / PolicyKit<a class="headerlink" href="#8-pkexec-policykit" title="Permanent link">&para;</a></h2>
+<p>Le projet utilise <code>pkexec</code> pour obtenir les droits root au moment d'écrire dans <code>/sys/class/power_supply/</code>.</p>
+<p>À tester :</p>
+<pre><code class="language-bash">pkexec --version
+</code></pre>
+<h2 id="9-sysfs-verification-compatibilite-seuils">9) sysfs : vérification compatibilité seuils<a class="headerlink" href="#9-sysfs-verification-compatibilite-seuils" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">ls /sys/class/power_supply/BAT0/
+cat /sys/class/power_supply/BAT0/status
+
+# Exemples (selon fabricant)
+cat /sys/class/power_supply/BAT0/charge_control_end_threshold 2&gt;/dev/null || true
+cat /sys/class/power_supply/BAT0/charge_stop_threshold 2&gt;/dev/null || true
+</code></pre>
+<h2 id="10-packaging-deb">10) Packaging (.deb)<a class="headerlink" href="#10-packaging-deb" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">cd install
+./build-deb.sh
+</code></pre>
+<h2 id="11-workflow-essentiel">11) Workflow essentiel<a class="headerlink" href="#11-workflow-essentiel" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash"># Cycle dev
+cargo check
+cargo run
+
+# Avant PR / release
+cargo fmt
+cargo clippy --all-features --all-targets -- -W clippy::pedantic -W clippy::nursery
+cargo test
+cargo build --release
+</code></pre>
+<h2 id="12-exemple-cargotoml">12) Exemple Cargo.toml<a class="headerlink" href="#12-exemple-cargotoml" title="Permanent link">&para;</a></h2>
+<pre><code class="language-toml">[package]
+name = &quot;battery_manager&quot;
+version = &quot;0.9.8&quot;
+edition = &quot;2021&quot;
+
+[dependencies]
+gtk4 = &quot;0.10&quot;
+dirs = &quot;6.0&quot;
+
+[profile.release]
+opt-level = 3
+lto = true
+</code></pre></div>
+        <div class="lang lang-en"><h1 id="rust-gtk4-references-en">Rust &amp; GTK4 References (EN)<a class="headerlink" href="#rust-gtk4-references-en" title="Permanent link">&para;</a></h1>
+<p>This file is a structured cheat-sheet for Rust/GTK4 + the system tools used by this project.</p>
+<h2 id="1-official-documentation">1) Official documentation<a class="headerlink" href="#1-official-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Rust (FR landing) : https://www.rust-lang.org/fr/</li>
+<li>The Rust Book : https://doc.rust-lang.org/book/</li>
+<li>The Cargo Book : https://doc.rust-lang.org/cargo/</li>
+<li>Rust API docs : https://doc.rust-lang.org/std/</li>
+<li>gtk-rs book (GTK4) : https://gtk-rs.org/gtk4-rs/stable/latest/book/</li>
+<li>GTK Docs : https://docs.gtk.org/</li>
+</ul>
+<h2 id="2-cargo-commands-daily">2) Cargo commands (daily)<a class="headerlink" href="#2-cargo-commands-daily" title="Permanent link">&para;</a></h2>
+<h3 id="cleanup">Cleanup<a class="headerlink" href="#cleanup" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clean                 # Removes target/
+</code></pre>
+<h3 id="build-run">Build / Run<a class="headerlink" href="#build-run" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo check                 # Fast type-check (no binary)
+cargo build                 # Debug build
+cargo build --release       # Optimized build
+
+cargo run                   # Build + run debug
+cargo run --release         # Build + run release
+cargo run -- --debug        # Pass args to the binary
+</code></pre>
+<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo test                  # Run all tests
+cargo test -- --nocapture   # Show println!
+cargo test -- --test-threads=1  # Run sequentially
+</code></pre>
+<h3 id="quality">Quality<a class="headerlink" href="#quality" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo fmt                   # Format
+cargo clippy                # Linter
+cargo clippy --fix          # Auto-fix (careful)
+</code></pre>
+<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo doc
+cargo doc --open
+</code></pre>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo add &lt;crate&gt;
+cargo update
+cargo tree
+</code></pre>
+<h2 id="3-clippy-aaa-levels">3) Clippy “AAA” levels<a class="headerlink" href="#3-clippy-aaa-levels" title="Permanent link">&para;</a></h2>
+<h3 id="basic">Basic<a class="headerlink" href="#basic" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy
+</code></pre>
+<h3 id="strict-pedantic">Strict (pedantic)<a class="headerlink" href="#strict-pedantic" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -W clippy::pedantic
+</code></pre>
+<h3 id="experimental-nursery">Experimental (nursery)<a class="headerlink" href="#experimental-nursery" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -W clippy::nursery
+</code></pre>
+<h3 id="deny-warnings">Deny warnings<a class="headerlink" href="#deny-warnings" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy -- -D warnings
+</code></pre>
+<h3 id="aaa-check-recommended">AAA check (recommended)<a class="headerlink" href="#aaa-check-recommended" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cargo clippy --all-features --all-targets -- \
+  -W clippy::pedantic \
+  -W clippy::nursery
+</code></pre>
+<h2 id="4-common-clippy-fixes">4) Common Clippy fixes<a class="headerlink" href="#4-common-clippy-fixes" title="Permanent link">&para;</a></h2>
+<h3 id="unreadable-literals">Unreadable literals<a class="headerlink" href="#unreadable-literals" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Before
+let x = 4000000;
+
+// ✅ After
+let x = 4_000_000;
+</code></pre>
+<h3 id="unnecessary-clones">Unnecessary clones<a class="headerlink" href="#unnecessary-clones" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Before
+let s = my_string.clone();
+
+// ✅ After (if possible)
+let s = &amp;my_string;
+</code></pre>
+<h3 id="missing-docs">Missing docs<a class="headerlink" href="#missing-docs" title="Permanent link">&para;</a></h3>
+<pre><code class="language-rust">// ❌ Before
+pub fn calculate(x: i32) -&gt; i32 { x * 2 }
+
+// ✅ After
+/// Multiplies the input by 2
+pub fn calculate(x: i32) -&gt; i32 { x * 2 }
+</code></pre>
+<h2 id="5-gtk4-development-linux">5) GTK4 development (Linux)<a class="headerlink" href="#5-gtk4-development-linux" title="Permanent link">&para;</a></h2>
+<h3 id="debianubuntu-dependencies">Debian/Ubuntu dependencies<a class="headerlink" href="#debianubuntu-dependencies" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">sudo apt update
+sudo apt install libgtk-4-dev build-essential policykit-1
+</code></pre>
+<h3 id="gtk-debugging">GTK debugging<a class="headerlink" href="#gtk-debugging" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">G_MESSAGES_DEBUG=all battery-manager --debug
+</code></pre>
+<h2 id="6-useful-system-tools-project">6) Useful system tools (project)<a class="headerlink" href="#6-useful-system-tools-project" title="Permanent link">&para;</a></h2>
+<h3 id="directory-tree">Directory tree<a class="headerlink" href="#directory-tree" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">tree -L 2 -I 'target' --dirsfirst
+</code></pre>
+<h3 id="count-lines-of-code">Count lines of code<a class="headerlink" href="#count-lines-of-code" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">cloc src/ --quiet
+</code></pre>
+<h3 id="fast-search-ripgrep">Fast search (ripgrep)<a class="headerlink" href="#fast-search-ripgrep" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash">rg &quot;pattern&quot; -n src/
+</code></pre>
+<h2 id="7-systemd-restore-service">7) systemd: restore service<a class="headerlink" href="#7-systemd-restore-service" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">systemctl status battery-manager.service
+systemctl restart battery-manager.service
+journalctl -u battery-manager.service -b --no-pager
+</code></pre>
+<h2 id="8-pkexec-policykit">8) pkexec / PolicyKit<a class="headerlink" href="#8-pkexec-policykit" title="Permanent link">&para;</a></h2>
+<p>The project uses <code>pkexec</code> to get root privileges when writing to <code>/sys/class/power_supply/</code>.</p>
+<p>Quick check:</p>
+<pre><code class="language-bash">pkexec --version
+</code></pre>
+<h2 id="9-sysfs-threshold-compatibility-checks">9) sysfs: threshold compatibility checks<a class="headerlink" href="#9-sysfs-threshold-compatibility-checks" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">ls /sys/class/power_supply/BAT0/
+cat /sys/class/power_supply/BAT0/status
+
+# Examples (vendor-dependent)
+cat /sys/class/power_supply/BAT0/charge_control_end_threshold 2&gt;/dev/null || true
+cat /sys/class/power_supply/BAT0/charge_stop_threshold 2&gt;/dev/null || true
+</code></pre>
+<h2 id="10-packaging-deb">10) Packaging (.deb)<a class="headerlink" href="#10-packaging-deb" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">cd install
+./build-deb.sh
+</code></pre>
+<h2 id="11-essential-workflow">11) Essential workflow<a class="headerlink" href="#11-essential-workflow" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash"># Dev cycle
+cargo check
+cargo run
+
+# Before PR / release
+cargo fmt
+cargo clippy --all-features --all-targets -- -W clippy::pedantic -W clippy::nursery
+cargo test
+cargo build --release
+</code></pre>
+<h2 id="12-cargotoml-example">12) Cargo.toml example<a class="headerlink" href="#12-cargotoml-example" title="Permanent link">&para;</a></h2>
+<pre><code class="language-toml">[package]
+name = &quot;battery_manager&quot;
+version = &quot;0.9.8&quot;
+edition = &quot;2021&quot;
+
+[dependencies]
+gtk4 = &quot;0.10&quot;
+dirs = &quot;6.0&quot;
+
+[profile.release]
+opt-level = 3
+lto = true
+</code></pre></div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

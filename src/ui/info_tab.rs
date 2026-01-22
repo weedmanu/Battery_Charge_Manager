@@ -22,11 +22,13 @@ use crate::ui::components::{
 ///
 /// # Returns
 ///
-/// Tuple of (tab Box, UpdatableWidgets) for timer updates
+/// Tuple of (tab Box, `UpdatableWidgets`) for timer updates
+#[allow(clippy::too_many_lines)]
 pub fn build_info_tab(
     info: &BatteryInfo,
     power_supply: &PowerSupplyInfo,
 ) -> (Box, UpdatableWidgets) {
+    crate::core::debug::debug_log("📋 [INFO_TAB] Building info tab...");
     let content_box = create_content_box(10);
 
     // === LIGNE 1: Seuils + Charge + Santé ===
@@ -45,27 +47,31 @@ pub fn build_info_tab(
     let mut col = 0;
 
     // Seuil de début (seulement si supporté)
-    let threshold_start_label = if let Some(threshold) = info.charge_start_threshold {
-        let col_box = Box::new(Orientation::Vertical, 4);
+    let threshold_start_label = info.charge_start_threshold.map_or_else(
+        || None,
+        |threshold| {
+            let col_box = Box::new(Orientation::Vertical, 4);
 
-        let title = Label::new(Some(&t("threshold_start")));
-        title.set_halign(gtk4::Align::Center);
-        col_box.append(&title);
+            let title = Label::new(Some(&t("threshold_start")));
+            title.set_halign(gtk4::Align::Center);
+            col_box.append(&title);
 
-        let value = Label::new(None);
-        value.set_halign(gtk4::Align::Center);
-        value.set_markup(&format!(
-            "<span size='x-large' weight='bold' color='#2196F3'>{}%</span>",
-            threshold
-        ));
-        col_box.append(&value);
+            let value = Label::new(None);
+            value.set_halign(gtk4::Align::Center);
+            value.set_markup(&format!(
+                "<span size='x-large' weight='bold'>{threshold}%</span>"
+            ));
+            value.add_css_class("color-primary");
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🎨 [INFO_TAB] Start threshold label: added color-primary class ({threshold}%)"
+            ));
+            col_box.append(&value);
 
-        thresholds_grid.attach(&col_box, col, 0, 1, 1);
-        col += 1;
-        Some(value)
-    } else {
-        None
-    };
+            thresholds_grid.attach(&col_box, col, 0, 1, 1);
+            col += 1;
+            Some(value)
+        },
+    );
 
     // Seuil de fin
     let stop_col_box = Box::new(Orientation::Vertical, 4);
@@ -77,10 +83,14 @@ pub fn build_info_tab(
     let threshold_stop_label = Label::new(None);
     threshold_stop_label.set_halign(gtk4::Align::Center);
     threshold_stop_label.set_markup(&format!(
-        "<span size='x-large' weight='bold' color='#4CAF50'>{}</span>",
+        "<span size='x-large' weight='bold'>{}</span>",
         info.charge_stop_threshold
-            .map(|v| format!("{}%", v))
-            .unwrap_or_else(|| "N/A".to_string())
+            .map_or_else(|| "N/A".to_string(), |v| format!("{v}%"))
+    ));
+    threshold_stop_label.add_css_class("color-success");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Stop threshold label: added color-success class ({:?})",
+        info.charge_stop_threshold
     ));
     stop_col_box.append(&threshold_stop_label);
 
@@ -88,26 +98,30 @@ pub fn build_info_tab(
     col += 1;
 
     // Alarme de décharge (seulement si supportée)
-    let alarm_label = if let Some(alarm_pct) = info.alarm_percent() {
-        let alarm_col_box = Box::new(Orientation::Vertical, 4);
+    let alarm_label = info.alarm_percent().map_or_else(
+        || None,
+        |alarm_pct| {
+            let alarm_col_box = Box::new(Orientation::Vertical, 4);
 
-        let alarm_title = Label::new(Some(&t("alarm")));
-        alarm_title.set_halign(gtk4::Align::Center);
-        alarm_col_box.append(&alarm_title);
+            let alarm_title = Label::new(Some(&t("alarm")));
+            alarm_title.set_halign(gtk4::Align::Center);
+            alarm_col_box.append(&alarm_title);
 
-        let value = Label::new(None);
-        value.set_halign(gtk4::Align::Center);
-        value.set_markup(&format!(
-            "<span size='x-large' weight='bold' color='#FF5722'>{:.1}%</span>",
-            alarm_pct
-        ));
-        alarm_col_box.append(&value);
+            let value = Label::new(None);
+            value.set_halign(gtk4::Align::Center);
+            value.set_markup(&format!(
+                "<span size='x-large' weight='bold'>{alarm_pct:.1}%</span>"
+            ));
+            value.add_css_class("color-danger");
+            crate::core::debug::debug_log_args(std::format_args!(
+                "🎨 [INFO_TAB] Alarm label: added color-danger class ({alarm_pct:.1}%)"
+            ));
+            alarm_col_box.append(&value);
 
-        thresholds_grid.attach(&alarm_col_box, col, 0, 1, 1);
-        Some(value)
-    } else {
-        None
-    };
+            thresholds_grid.attach(&alarm_col_box, col, 0, 1, 1);
+            Some(value)
+        },
+    );
 
     thresholds_box.append(&thresholds_grid);
 
@@ -128,7 +142,12 @@ pub fn build_info_tab(
     let capacity_label = Label::new(None);
     capacity_label.set_halign(gtk4::Align::Center);
     capacity_label.set_markup(&format!(
-        "<span size='xx-large' weight='bold' color='#2196F3'>{}</span><span size='large'>%</span>",
+        "<span size='xx-large' weight='bold'>{}</span><span size='large'>%</span>",
+        info.capacity_percent
+    ));
+    capacity_label.add_css_class("color-primary");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Capacity label: added color-primary class ({}%)",
         info.capacity_percent
     ));
     charge_box.append(&capacity_label);
@@ -151,16 +170,16 @@ pub fn build_info_tab(
 
     let health_label = Label::new(None);
     health_label.set_halign(gtk4::Align::Center);
-    let health_color = if info.health_percent >= 80.0 {
-        "green"
-    } else if info.health_percent >= 50.0 {
-        "orange"
-    } else {
-        "red"
-    };
     health_label.set_markup(&format!(
-        "<span size='xx-large' weight='bold' color='{}'>{:.1}</span><span size='large'>%</span>",
-        health_color, info.health_percent
+        "<span size='xx-large' weight='bold'>{:.1}</span><span size='large'>%</span>",
+        info.health_percent
+    ));
+    let health_class = info.get_health_css_class();
+    health_label.add_css_class(health_class);
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Health label: added {} class ({:.1}%)",
+        health_class,
+        info.health_percent
     ));
     health_box.append(&health_label);
 
@@ -213,6 +232,13 @@ pub fn build_info_tab(
     let status_value = Label::new(None);
     status_value.set_halign(gtk4::Align::Center);
     status_value.set_markup(&info.get_status_markup());
+    let status_class = info.get_status_css_class();
+    status_value.add_css_class(status_class);
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Status label: added {} class ({})",
+        status_class,
+        info.status
+    ));
     status_box.append(&status_value);
 
     // Espaceur pour pousser les infos secondaires vers le bas
@@ -221,7 +247,8 @@ pub fn build_info_tab(
     status_box.append(&create_info_label(""));
     status_box.append(&create_info_label(""));
     status_box.append(&create_info_label(&format!(
-        "Niveau: {}",
+        "{}: {}",
+        t("capacity_level"),
         info.capacity_level
     )));
     row2.attach(&status_frame, 1, 0, 1, 1);
@@ -233,7 +260,12 @@ pub fn build_info_tab(
     let battery_main = Label::new(None);
     battery_main.set_halign(gtk4::Align::Center);
     battery_main.set_markup(&format!(
-        "<span size='xx-large' weight='bold' color='#2196F3'>{}</span>",
+        "<span size='xx-large' weight='bold'>{}</span>",
+        info.manufacturer.trim()
+    ));
+    battery_main.add_css_class("color-primary");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Battery manufacturer label: added color-primary class ({})",
         info.manufacturer.trim()
     ));
     battery_box.append(&battery_main);
@@ -267,7 +299,12 @@ pub fn build_info_tab(
     let power_main = Label::new(None);
     power_main.set_halign(gtk4::Align::Center);
     power_main.set_markup(&format!(
-        "<span size='xx-large' weight='bold' color='orange'>{:.2}</span><span size='large'> W</span>",
+        "<span size='xx-large' weight='bold'>{:.2}</span><span size='large'> W</span>",
+        info.power_watts()
+    ));
+    power_main.add_css_class("color-warning");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Power label: added color-warning class ({:.2}W)",
         info.power_watts()
     ));
     electrical_box.append(&power_main);
@@ -290,7 +327,12 @@ pub fn build_info_tab(
     let capacity_main = Label::new(None);
     capacity_main.set_halign(gtk4::Align::Center);
     capacity_main.set_markup(&format!(
-        "<span size='xx-large' weight='bold' color='#2196F3'>{}</span><span size='large'> mAh</span>",
+        "<span size='xx-large' weight='bold'>{}</span><span size='large'> mAh</span>",
+        info.charge_now_mah()
+    ));
+    capacity_main.add_css_class("color-primary");
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Capacity (mAh) label: added color-primary class ({}mAh)",
         info.charge_now_mah()
     ));
     capacity_box.append(&capacity_main);
@@ -298,14 +340,20 @@ pub fn build_info_tab(
     // Espaceur pour pousser les infos secondaires vers le bas
     capacity_box.append(&create_vertical_spacer());
 
-    let charge_now_value = create_info_label(&format!("Actuelle: {} mAh", info.charge_now_mah()));
+    let charge_now_value = create_info_label(&format!(
+        "{}: {} mAh",
+        t("current_capacity"),
+        info.charge_now_mah()
+    ));
     capacity_box.append(&charge_now_value);
     capacity_box.append(&create_info_label(&format!(
-        "Max: {} mAh",
+        "{}: {} mAh",
+        t("full_capacity"),
         info.charge_full_mah()
     )));
     capacity_box.append(&create_info_label(&format!(
-        "Origine: {} mAh",
+        "{}: {} mAh",
+        t("design_capacity"),
         info.charge_full_design_mah()
     )));
     row3.attach(&capacity_frame, 1, 0, 1, 1);
@@ -317,6 +365,13 @@ pub fn build_info_tab(
     let service_label = Label::new(None);
     service_label.set_halign(gtk4::Align::Center);
     service_label.set_markup(&info.service_status_markup());
+    let service_class = info.service_status_css_class();
+    service_label.add_css_class(service_class);
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🎨 [INFO_TAB] Service label: added {} class (active={})",
+        service_class,
+        info.service_active
+    ));
     service_box.append(&service_label);
 
     // Espaceur pour pousser les infos secondaires vers le bas
@@ -330,7 +385,7 @@ pub fn build_info_tab(
 
     content_box.append(&row3);
 
-    // Créer la structure des widgets à mettre à jour
+    // Create updatable widgets structure
     let updatable = UpdatableWidgets {
         power_source_value,
         status_value,

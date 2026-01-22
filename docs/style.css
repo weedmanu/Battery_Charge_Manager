@@ -1,0 +1,332 @@
+/* Battery Manager docs style
+   - Modern, responsive, keyboard-friendly
+   - Light/Dark + Auto theme via radio buttons
+   - FR/EN language switch via radio buttons
+*/
+
+:root {
+  color-scheme: light dark;
+}
+
+/* Hide the radio inputs but keep them accessible */
+.docs-toggle {
+  position: absolute;
+  left: -9999px;
+}
+
+.app {
+  --bg: #ffffff;
+  --panel: #f6f7f9;
+  --panel-2: #ffffff;
+  --text: #1f2328;
+  --muted: #5a6674;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --accent-2: #1f6feb;
+  --code-bg: #f6f8fa;
+  --shadow: 0 10px 30px rgba(16, 24, 40, 0.10);
+  --radius: 12px;
+  --sidebar-w: 290px;
+
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+@media (prefers-color-scheme: dark) {
+  .app {
+    --bg: #0b0f14;
+    --panel: #111826;
+    --panel-2: #0f1722;
+    --text: #e6edf3;
+    --muted: #9aa4b2;
+    --border: #283244;
+    --accent: #5dade2;
+    --accent-2: #7dc3ff;
+    --code-bg: #0c1420;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Force light */
+#theme-light:checked ~ .app {
+  --bg: #ffffff;
+  --panel: #f6f7f9;
+  --panel-2: #ffffff;
+  --text: #1f2328;
+  --muted: #5a6674;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --accent-2: #1f6feb;
+  --code-bg: #f6f8fa;
+  --shadow: 0 10px 30px rgba(16, 24, 40, 0.10);
+}
+
+/* Force dark */
+#theme-dark:checked ~ .app {
+  --bg: #0b0f14;
+  --panel: #111826;
+  --panel-2: #0f1722;
+  --text: #e6edf3;
+  --muted: #9aa4b2;
+  --border: #283244;
+  --accent: #5dade2;
+  --accent-2: #7dc3ff;
+  --code-bg: #0c1420;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+}
+
+.brand img {
+  width: 28px;
+  height: 28px;
+}
+
+.brand .title {
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.brand .subtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 10px;
+}
+
+.control-group {
+  display: grid;
+  gap: 8px;
+}
+
+.control-group .label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pill:hover {
+  border-color: var(--accent);
+}
+
+.nav {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.nav a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.nav a:hover {
+  background: rgba(127, 127, 127, 0.08);
+  border-color: var(--border);
+}
+
+.nav .nav-title {
+  margin-top: 12px;
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.content {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 26px;
+  min-width: 0;
+}
+
+/* Typography */
+.content h1, .content h2, .content h3, .content h4 {
+  scroll-margin-top: 90px;
+}
+
+.content h1 {
+  font-size: 30px;
+  margin: 0 0 14px;
+}
+
+.content h2 {
+  font-size: 22px;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.content h3 {
+  font-size: 18px;
+  margin-top: 18px;
+}
+
+.content p {
+  margin: 10px 0;
+}
+
+.content a {
+  color: var(--accent);
+}
+
+.content a:hover {
+  color: var(--accent-2);
+}
+
+.content code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+.content pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  overflow: auto;
+}
+
+.content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.content blockquote {
+  border-left: 4px solid var(--accent);
+  padding: 10px 14px;
+  margin: 14px 0;
+  background: rgba(127, 127, 127, 0.06);
+  border-radius: 10px;
+}
+
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.content th, .content td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  vertical-align: top;
+}
+
+.content th {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* Language switch */
+.lang {
+  display: none;
+}
+
+#lang-fr:checked ~ .app .lang-fr { display: block; }
+#lang-en:checked ~ .app .lang-en { display: block; }
+
+#lang-fr:checked ~ .app .toc-fr { display: block; }
+#lang-en:checked ~ .app .toc-en { display: block; }
+
+.toc-fr, .toc-en {
+  display: none;
+}
+
+/* Small utilities */
+.kbd {
+  font-family: ui-monospace, monospace;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 8px;
+  padding: 2px 8px;
+}
