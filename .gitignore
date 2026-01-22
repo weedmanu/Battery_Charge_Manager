@@ -19,5 +19,8 @@ Thumbs.db
 *.deb
 *.rpm
 
+# Docs sources (package ships only HTML)
+/docs/*.py
+
 # Logs
 *.log
