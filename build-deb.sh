@@ -155,6 +155,7 @@ echo -e "${GREEN}✓${NC} Fichiers DEBIAN créés"
 # Créer la structure de fichiers
 mkdir -p "${DEB_DIR}/usr/local/bin"
 mkdir -p "${DEB_DIR}/usr/share/applications"
+mkdir -p "${DEB_DIR}/usr/share/pixmaps"
 mkdir -p "${DEB_DIR}/etc/systemd/system"
 mkdir -p "${DEB_DIR}/usr/share/doc/${APP_NAME}"
 
@@ -163,6 +164,11 @@ echo -e "${BLUE}Copie des fichiers...${NC}"
 cp target/release/battery_manager "${DEB_DIR}/usr/local/bin/battery-manager"
 chmod 755 "${DEB_DIR}/usr/local/bin/battery-manager"
 echo -e "${GREEN}✓${NC} Binaire copié"
+
+# Copier l'icône
+cp resources/icon.png "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
+chmod 644 "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
+echo -e "${GREEN}✓${NC} Icône copiée"
 
 # Copier le script de restauration
 cp resources/battery-manager-restore.sh "${DEB_DIR}/usr/local/bin/battery-manager-restore"
