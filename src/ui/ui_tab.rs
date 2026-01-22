@@ -71,7 +71,7 @@ pub fn build_ui_tab() -> ScrolledWindow {
 
             lang_status.set_markup(&format!(
                 "<span color='orange' size='small'>{}</span>",
-                t("language_changed")
+                t("restart_required")
             ));
 
             glib::Propagation::Proceed

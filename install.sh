@@ -28,8 +28,6 @@ echo "Utilisation du binaire existant..."
 
 # Créer les répertoires nécessaires
 mkdir -p /usr/bin
-mkdir -p /usr/share/applications
-mkdir -p /usr/share/pixmaps
 mkdir -p /lib/systemd/system
 
 # Copier le binaire
@@ -37,18 +35,10 @@ echo "Installation du binaire..."
 cp target/release/battery_manager /usr/bin/battery-manager
 chmod +x /usr/bin/battery-manager
 
-# Copier l'icône
-echo "Installation de l'icône..."
-cp resources/icon.png /usr/share/pixmaps/battery-manager.png
-
 # Copier le script de restauration
 echo "Installation du script de restauration..."
 cp resources/battery-manager-restore.sh /usr/bin/battery-manager-restore
 chmod +x /usr/bin/battery-manager-restore
-
-# Copier le fichier .desktop
-echo "Installation du fichier .desktop..."
-cp resources/battery-manager.desktop /usr/share/applications/
 
 # Copier le service systemd
 echo "Installation du service systemd..."

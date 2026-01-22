@@ -131,6 +131,10 @@ static TRANSLATIONS: Lazy<HashMap<&'static str, HashMap<&'static str, &'static s
             "language_changed",
             "Langue modifiée. Redémarrez l'application pour appliquer le changement.",
         );
+        fr.insert(
+            "restart_required",
+            "Redémarrage automatique dans 1 seconde...",
+        );
         fr.insert("theme_setting", "Thème de l'interface");
         fr.insert("theme_light", "Clair");
         fr.insert("theme_dark", "Sombre");
@@ -254,6 +258,7 @@ static TRANSLATIONS: Lazy<HashMap<&'static str, HashMap<&'static str, &'static s
             "language_changed",
             "Language changed. Restart the application to apply.",
         );
+        en.insert("restart_required", "Auto-restart in 1 second...");
 
         map.insert("en", en);
 
