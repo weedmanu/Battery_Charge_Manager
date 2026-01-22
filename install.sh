@@ -27,15 +27,15 @@ fi
 echo "Utilisation du binaire existant..."
 
 # Créer les répertoires nécessaires
-mkdir -p /usr/local/bin
+mkdir -p /usr/bin
 mkdir -p /usr/share/applications
 mkdir -p /usr/share/pixmaps
-mkdir -p /etc/systemd/system
+mkdir -p /lib/systemd/system
 
 # Copier le binaire
 echo "Installation du binaire..."
-cp target/release/battery_manager /usr/local/bin/battery-manager
-chmod +x /usr/local/bin/battery-manager
+cp target/release/battery_manager /usr/bin/battery-manager
+chmod +x /usr/bin/battery-manager
 
 # Copier l'icône
 echo "Installation de l'icône..."
@@ -43,8 +43,8 @@ cp resources/icon.png /usr/share/pixmaps/battery-manager.png
 
 # Copier le script de restauration
 echo "Installation du script de restauration..."
-cp resources/battery-manager-restore.sh /usr/local/bin/battery-manager-restore
-chmod +x /usr/local/bin/battery-manager-restore
+cp resources/battery-manager-restore.sh /usr/bin/battery-manager-restore
+chmod +x /usr/bin/battery-manager-restore
 
 # Copier le fichier .desktop
 echo "Installation du fichier .desktop..."
@@ -52,7 +52,7 @@ cp resources/battery-manager.desktop /usr/share/applications/
 
 # Copier le service systemd
 echo "Installation du service systemd..."
-cp resources/battery-manager.service /etc/systemd/system/
+cp resources/battery-manager.service /lib/systemd/system/
 
 # Recharger systemd
 echo "Rechargement de systemd..."
@@ -67,4 +67,4 @@ echo -e "\nPour désinstaller, exécutez: sudo ./uninstall.sh"
 echo -e "\nCommandes utiles:"
 echo -e "  - Lancer l'application: battery-manager"
 echo -e "  - État du service: sudo systemctl status battery-manager"
-echo -e "  - Restaurer maintenant: sudo /usr/local/bin/battery-manager-restore"
+echo -e "  - Restaurer maintenant: sudo battery-manager-restore"

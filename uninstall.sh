@@ -24,16 +24,16 @@ systemctl stop battery-manager.service 2>/dev/null || true
 
 # Supprimer les fichiers
 echo "Suppression des fichiers..."
-rm -f /usr/local/bin/battery-manager
-rm -f /usr/local/bin/battery-manager-restore
+rm -f /usr/bin/battery-manager
+rm -f /usr/bin/battery-manager-restore
 rm -f /usr/share/applications/battery-manager.desktop
 rm -f /usr/share/pixmaps/battery-manager.png
-rm -f /etc/systemd/system/battery-manager.service
+rm -f /lib/systemd/system/battery-manager.service
 
 # Recharger systemd
 echo "Rechargement de systemd..."
 systemctl daemon-reload
 
 echo -e "\n${GREEN}✓ Désinstallation terminée avec succès!${NC}"
-echo -e "\n${YELLOW}Note: Les fichiers de configuration dans ~/.config/battery-manager/ ont été conservés${NC}"
-echo -e "Pour les supprimer également: rm -rf ~/.config/battery-manager/"
+echo -e "\n${YELLOW}Note: Les fichiers de configuration dans /etc/battery-manager/ ont été conservés${NC}"
+echo -e "Pour les supprimer également: sudo rm -rf /etc/battery-manager/"

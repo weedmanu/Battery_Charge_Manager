@@ -1,210 +1,147 @@
 # Battery Manager
 
-[![CI](https://github.com/weedmanu/Battery_Charge_Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/weedmanu/Battery_Charge_Manager/actions/workflows/ci.yml)
+Gestionnaire de seuils de charge pour batteries Linux avec interface GTK4.
 
-Un gestionnaire de batterie moderne pour Linux avec interface GTK4, permettant de contrôler les seuils de charge sans dépendance à TLP.
+## Description
 
-## Fonctionnalités
+Application simple permettant de visualiser les informations de batterie et de configurer les seuils de charge sur les ordinateurs portables Linux compatibles. Écrit en Rust, utilise l'interface sysfs du noyau pour lire et modifier les paramètres de charge.
 
-- 🔋 **Affichage complet des informations de batterie** : état, charge, santé, capacité, paramètres électriques
-- ⚙️ **Contrôle des seuils de charge** : définir les seuils de début et fin de charge pour préserver la batterie
-- 💾 **Persistance automatique** : les seuils sont restaurés automatiquement au démarrage via systemd
-- 🎨 **Interface moderne** : GTK4 avec organisation en cartes compactes
-- 🏗️ **Architecture SOLID** : séparation claire entre logique métier (core) et interface (ui)
-- 🔓 **Aucune dépendance TLP** : écriture directe dans les fichiers système `/sys/class/power_supply/`
+## Ce que fait cette application
+
+- Affiche les informations de base de la batterie (charge, état, santé)
+- Permet de définir des seuils de début et fin de charge
+- Sauvegarde les seuils dans `/etc/battery-manager/BAT*.conf` (format texte)
+- Restaure les seuils au démarrage via un service systemd
+- Écrit directement dans `/sys/class/power_supply/` (nécessite pkexec)
 
 ## Prérequis
 
-- Rust (édition 2021 ou plus récente)
+- Debian et dérivés (Ubuntu, Mint, Pop!\_OS, etc.)
+- Rust (édition 2021)
 - GTK4 et bibliothèques de développement
-- pkexec (PolicyKit) pour les opérations privilégiées
+- pkexec (PolicyKit)
+- Un ordinateur portable avec support sysfs pour les seuils de charge
 
-### Installation des dépendances (Debian/Ubuntu)
+### Installation des dépendances
 
 ```bash
 sudo apt install libgtk-4-dev build-essential policykit-1
 ```
 
-### Installation des dépendances (Fedora)
-
-```bash
-sudo dnf install gtk4-devel gcc polkit
-```
-
-### Installation des dépendances (Arch)
-
-```bash
-sudo pacman -S gtk4 base-devel polkit
-```
-
 ## Installation
 
-### Option 1 : Installation via package .deb (Recommandé)
-
-1. **Télécharger le package .deb** depuis les [Releases](https://github.com/votre-utilisateur/Battery_Manager/releases)
-
-2. **Installer le package** :
-   ```bash
-   sudo dpkg -i battery-manager_1.0.0_amd64.deb
-   sudo apt-get install -f  # Si des dépendances manquent
-   ```
-
-### Option 2 : Compilation depuis les sources
-
-1. **Cloner le dépôt** :
-
-   ```bash
-   git clone https://github.com/votre-utilisateur/Battery_Manager.git
-   cd Battery_Manager
-   ```
-
-2. **Compiler et installer** :
-
-   ```bash
-   cargo build --release
-   sudo ./install.sh
-   ```
-
-### Option 3 : Créer votre propre package .deb
+### Package .deb
 
 ```bash
 ./build-deb.sh
 sudo dpkg -i target/battery-manager_1.0.0_amd64.deb
 ```
 
-Le script d'installation :
+### Compilation manuelle
 
-- Compile le projet en mode release
-- Copie le binaire vers `/usr/local/bin/battery-manager`
-- Installe le script de restauration `/usr/local/bin/battery-manager-restore`
-- Crée l'entrée du menu applications `/usr/share/applications/battery-manager.desktop`
-- Configure le service systemd `/etc/systemd/system/battery-manager.service`
-- Active le service pour la restauration automatique au démarrage
+```bash
+git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+cd Battery_Manager
+cargo build --release
+sudo ./install.sh
+```
+
+Le script d'installation copie le binaire dans `/usr/bin/`, crée l'entrée du menu, et configure le service systemd pour la restauration automatique des seuils.
 
 ## Utilisation
 
-### Lancer l'application
-
-Depuis le menu des applications ou en ligne de commande :
+Lancer l'application depuis le menu ou en terminal :
 
 ```bash
 battery-manager
 ```
 
-### Onglet Informations
+L'interface comporte deux onglets :
 
-Affiche 9 cartes avec toutes les informations de votre batterie :
+- **Informations** : affiche l'état de la batterie (charge, santé, voltage, etc.)
+- **Paramètres** : curseurs pour définir les seuils de charge (0-100%)
 
-- État d'alimentation (sur secteur / sur batterie)
-- État actuel (en charge, décharge, pleine)
-- Niveau de charge et capacité
-- Santé de la batterie
-- Paramètres électriques (tension, courant, puissance)
-- Informations système (fabricant, modèle, technologie)
-- Seuils de charge configurés
-
-### Onglet Paramètres
-
-- **Définir les seuils de charge** : utilisez les curseurs pour choisir entre 0% et 100%
-  - Seuil de début : le niveau auquel la batterie commence à se charger
-  - Seuil de fin : le niveau maximal de charge
-- **Appliquer les paramètres** : sauvegarde et applique immédiatement les seuils
-- **Charger à 100%** : désactive temporairement les seuils pour une charge complète
-
-### Gestion du service systemd
-
-```bash
-# Voir l'état du service
-sudo systemctl status battery-manager
-
-# Restaurer les seuils manuellement
-sudo /usr/local/bin/battery-manager-restore
-
-# Désactiver la restauration automatique
-sudo systemctl disable battery-manager
-
-# Réactiver la restauration automatique
-sudo systemctl enable battery-manager
-```
+Les seuils sont appliqués immédiatement et sauvegardés pour la prochaine session.
 
 ## Désinstallation
-
-### Si installé via .deb
-
-```bash
-# Désinstaller en gardant la configuration
-sudo apt remove battery-manager
-
-# Désinstaller et supprimer toute la configuration
-sudo apt purge battery-manager
-```
-
-### Si installé via install.sh
 
 ```bash
 sudo ./uninstall.sh
 ```
 
-Les fichiers de configuration dans `/etc/battery-manager/` peuvent être supprimés manuellement si nécessaire.
-
-## Architecture du projet
+## Structure du projet
 
 ```
 Battery_Manager/
-├── src/
-│   ├── main.rs              # Point d'entrée
-│   ├── core/                # Logique métier
-│   │   ├── mod.rs
-│   │   ├── battery.rs       # Lecture des informations de batterie
-│   │   ├── power_supply.rs  # Détection de l'alimentation secteur
-│   │   └── battery_control.rs # Gestion des seuils de charge
-│   └── ui/                  # Interface utilisateur
-│       ├── mod.rs
-│       ├── app.rs           # Fenêtre principale
-│       ├── components.rs    # Composants réutilisables
-│       ├── info_tab.rs      # Onglet d'informations
-│       └── settings_tab.rs  # Onglet des paramètres
-├── resources/
-│   ├── battery-manager.desktop      # Entrée du menu
-│   ├── battery-manager.service      # Service systemd
-│   └── battery-manager-restore.sh   # Script de restauration
-├── install.sh               # Script d'installation
-├── uninstall.sh            # Script de désinstallation
-└── Cargo.toml              # Dépendances Rust
+├── Cargo.toml                      # Dépendances Rust et configuration du projet
+├── Cargo.lock                      # Versions exactes des dépendances (généré)
+├── LICENSE                         # Licence MIT
+├── README.md                       # Documentation (Markdown)
+├── README.html                     # Documentation (HTML pour navigation web)
+├── CARGO_BASICS.md                 # Documentation sur Cargo
+│
+├── install.sh                      # Script d'installation manuelle
+├── uninstall.sh                    # Script de désinstallation manuelle
+├── build-deb.sh                    # Générateur de package .deb
+│
+├── resources/                      # Fichiers de ressources système
+│   ├── battery-manager.desktop     # Entrée du menu applications
+│   ├── battery-manager.service     # Service systemd (restaure les seuils au boot)
+│   ├── battery-manager-restore.sh  # Script appelé par systemd au démarrage
+│   └── icon.png                    # Icône de l'application (8.4KB)
+│
+├── src/                            # Code source Rust
+│   ├── main.rs                     # Point d'entrée, lance l'application GTK
+│   │
+│   ├── core/                       # Logique métier (indépendante de l'UI)
+│   │   ├── mod.rs                  # Exports du module core
+│   │   ├── battery.rs              # Lecture infos batterie depuis /sys/class/power_supply/
+│   │   ├── power_supply.rs         # Détection alimentation secteur (AC)
+│   │   ├── vendor_detection.rs     # Détection fabricant et chemins sysfs spécifiques
+│   │   └── traits.rs               # Traits pour injection de dépendances (tests)
+│   │
+│   └── ui/                         # Interface utilisateur GTK4
+│       ├── mod.rs                  # Exports du module ui
+│       ├── app.rs                  # Fenêtre principale et gestion onglets
+│       ├── components.rs           # Composants réutilisables (cartes d'infos)
+│       ├── info_tab.rs             # Onglet "Informations" (affichage batterie)
+│       └── settings_tab.rs         # Onglet "Paramètres" (curseurs seuils)
+│
+└── target/                         # Dossier de build Cargo (ignoré par git)
+    ├── debug/                      # Binaires de développement
+    └── release/                    # Binaires optimisés
+        └── battery_manager         # Exécutable final
 ```
+
+### Fichiers de configuration système
+
+Après installation, l'application crée :
+
+- `/etc/battery-manager/BAT*.conf` : seuils configurés (format texte : `START_THRESHOLD=60\nSTOP_THRESHOLD=80`)
+- `/usr/bin/battery-manager` : binaire exécutable
+- `/usr/bin/battery-manager-restore` : script de restauration
+- `/lib/systemd/system/battery-manager.service` : service systemd
+- `/usr/share/applications/battery-manager.desktop` : lanceur menu
+- `/usr/share/pixmaps/battery-manager.png` : icône
 
 ## Compatibilité
 
-Cette application fonctionne avec les ordinateurs portables qui exposent les seuils de charge via sysfs. Les chemins suivants sont supportés :
+L'application fonctionne sur les ordinateurs portables dont le noyau Linux expose les fichiers de contrôle de charge dans `/sys/class/power_supply/BAT*/`.
 
-- `/sys/class/power_supply/BAT*/charge_control_start_threshold`
-- `/sys/class/power_supply/BAT*/charge_control_end_threshold`
-- `/sys/class/power_supply/BAT*/charge_start_threshold`
-- `/sys/class/power_supply/BAT*/charge_stop_threshold`
-- `/sys/class/power_supply/BAT*/charge_end_threshold`
+Chemins supportés :
 
-Testé sur :
+- `charge_control_start_threshold` / `charge_control_end_threshold`
+- `charge_start_threshold` / `charge_stop_threshold`
+- `charge_end_threshold`
 
-- ThinkPad (Lenovo)
-- Autres ordinateurs portables avec support du noyau Linux
+Fonctionnera si votre ordinateur portable expose ces fichiers via sysfs. Vérifiez avec `ls /sys/class/power_supply/BAT0/` pour voir ce qui est disponible sur votre système.
 
-## Contribution
+## Limitations
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-
-- Signaler des bugs
-- Proposer de nouvelles fonctionnalités
-- Améliorer la documentation
-- Ajouter le support pour d'autres fabricants
+- Nécessite un support matériel et noyau approprié
+- Certains fabricants n'exposent qu'un seul seuil (fin de charge uniquement)
+- L'application ne peut pas créer de support là où le matériel/noyau ne le fournit pas
 
 ## Licence
 
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
-
-## Remerciements
-
-- GTK Team pour GTK4
-- Communauté Rust pour les excellentes bibliothèques
-- Utilisateurs de TLP pour l'inspiration
-# Test pre-commit hook
-
+MIT - voir [LICENSE](LICENSE)

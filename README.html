@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Manager - Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        h3 {
+            color: #546e7a;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .tree {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .tree-comment {
+            color: #7f8c8d;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        strong {
+            color: #2c3e50;
+        }
+        
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔋 Battery Manager</h1>
+        <p class="subtitle">Gestionnaire de seuils de charge pour batteries Linux avec interface GTK4</p>
+        
+        <div class="section">
+            <h2>Description</h2>
+            <p>Application simple permettant de visualiser les informations de batterie et de configurer les seuils de charge sur les ordinateurs portables Linux compatibles. Écrit en Rust, utilise l'interface sysfs du noyau pour lire et modifier les paramètres de charge.</p>
+        </div>
+        
+        <div class="section">
+            <h2>Ce que fait cette application</h2>
+            <ul>
+                <li>Affiche les informations de base de la batterie (charge, état, santé)</li>
+                <li>Permet de définir des seuils de début et fin de charge</li>
+                <li>Sauvegarde les seuils dans <code>/etc/battery-manager/BAT*.conf</code> (format texte)</li>
+                <li>Restaure les seuils au démarrage via un service systemd</li>
+                <li>Écrit directement dans <code>/sys/class/power_supply/</code> (nécessite pkexec)</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Prérequis</h2>
+            <ul>
+                <li>Debian et dérivés (Ubuntu, Mint, Pop!_OS, etc.)</li>
+                <li>Rust (édition 2021)</li>
+                <li>GTK4 et bibliothèques de développement</li>
+                <li>pkexec (PolicyKit)</li>
+                <li>Un ordinateur portable avec support sysfs pour les seuils de charge</li>
+            </ul>
+            
+            <h3>Installation des dépendances</h3>
+            <pre><code>sudo apt install libgtk-4-dev build-essential policykit-1</code></pre>
+        </div>
+        
+        <div class="section">
+            <h2>Installation</h2>
+            
+            <h3>Package .deb</h3>
+            <pre><code>./build-deb.sh
+sudo dpkg -i target/battery-manager_1.0.0_amd64.deb</code></pre>
+            
+            <h3>Compilation manuelle</h3>
+            <pre><code>git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+cd Battery_Manager
+cargo build --release
+sudo ./install.sh</code></pre>
+            
+            <p>Le script d'installation copie le binaire dans <code>/usr/bin/</code>, crée l'entrée du menu, et configure le service systemd pour la restauration automatique des seuils.</p>
+        </div>
+        
+        <div class="section">
+            <h2>Utilisation</h2>
+            <p>Lancer l'application depuis le menu ou en terminal :</p>
+            <pre><code>battery-manager</code></pre>
+            
+            <p>L'interface comporte deux onglets :</p>
+            <ul>
+                <li><strong>Informations</strong> : affiche l'état de la batterie (charge, santé, voltage, etc.)</li>
+                <li><strong>Paramètres</strong> : curseurs pour définir les seuils de charge (0-100%)</li>
+            </ul>
+            
+            <p>Les seuils sont appliqués immédiatement et sauvegardés pour la prochaine session.</p>
+        </div>
+        
+        <div class="section">
+            <h2>Désinstallation</h2>
+            <pre><code>sudo ./uninstall.sh</code></pre>
+        </div>
+        
+        <div class="section">
+            <h2>Structure du projet</h2>
+            <div class="tree">Battery_Manager/
+├── Cargo.toml                      <span class="tree-comment"># Dépendances Rust et configuration du projet</span>
+├── Cargo.lock                      <span class="tree-comment"># Versions exactes des dépendances (généré)</span>
+├── LICENSE                         <span class="tree-comment"># Licence MIT</span>
+├── README.md                       <span class="tree-comment"># Documentation (Markdown)</span>
+├── README.html                     <span class="tree-comment"># Documentation (HTML pour navigation web)</span>
+├── CARGO_BASICS.md                 <span class="tree-comment"># Documentation sur Cargo</span>
+│
+├── install.sh                      <span class="tree-comment"># Script d'installation manuelle</span>
+├── uninstall.sh                    <span class="tree-comment"># Script de désinstallation manuelle</span>
+├── build-deb.sh                    <span class="tree-comment"># Générateur de package .deb</span>
+│
+├── resources/                      <span class="tree-comment"># Fichiers de ressources système</span>
+│   ├── battery-manager.desktop     <span class="tree-comment"># Entrée du menu applications</span>
+│   ├── battery-manager.service     <span class="tree-comment"># Service systemd (restaure les seuils au boot)</span>
+│   ├── battery-manager-restore.sh  <span class="tree-comment"># Script appelé par systemd au démarrage</span>
+│   └── icon.png                    <span class="tree-comment"># Icône de l'application (8.4KB)</span>
+│
+├── src/                            <span class="tree-comment"># Code source Rust</span>
+│   ├── main.rs                     <span class="tree-comment"># Point d'entrée, lance l'application GTK</span>
+│   │
+│   ├── core/                       <span class="tree-comment"># Logique métier (indépendante de l'UI)</span>
+│   │   ├── mod.rs                  <span class="tree-comment"># Exports du module core</span>
+│   │   ├── battery.rs              <span class="tree-comment"># Lecture infos batterie depuis /sys/class/power_supply/</span>
+│   │   ├── power_supply.rs         <span class="tree-comment"># Détection alimentation secteur (AC)</span>
+│   │   ├── vendor_detection.rs     <span class="tree-comment"># Détection fabricant et chemins sysfs spécifiques</span>
+│   │   └── traits.rs               <span class="tree-comment"># Traits pour injection de dépendances (tests)</span>
+│   │
+│   └── ui/                         <span class="tree-comment"># Interface utilisateur GTK4</span>
+│       ├── mod.rs                  <span class="tree-comment"># Exports du module ui</span>
+│       ├── app.rs                  <span class="tree-comment"># Fenêtre principale et gestion onglets</span>
+│       ├── components.rs           <span class="tree-comment"># Composants réutilisables (cartes d'infos)</span>
+│       ├── info_tab.rs             <span class="tree-comment"># Onglet "Informations" (affichage batterie)</span>
+│       └── settings_tab.rs         <span class="tree-comment"># Onglet "Paramètres" (curseurs seuils)</span>
+│
+└── target/                         <span class="tree-comment"># Dossier de build Cargo (ignoré par git)</span>
+    ├── debug/                      <span class="tree-comment"># Binaires de développement</span>
+    └── release/                    <span class="tree-comment"># Binaires optimisés</span>
+        └── battery_manager         <span class="tree-comment"># Exécutable final</span></div>
+            
+            <h3>Fichiers de configuration système</h3>
+            <p>Après installation, l'application crée :</p>
+            <ul>
+                <li><code>/etc/battery-manager/BAT*.conf</code> : seuils configurés (format texte : <code>START_THRESHOLD=60\nSTOP_THRESHOLD=80</code>)</li>
+                <li><code>/usr/bin/battery-manager</code> : binaire exécutable</li>
+                <li><code>/usr/bin/battery-manager-restore</code> : script de restauration</li>
+                <li><code>/lib/systemd/system/battery-manager.service</code> : service systemd</li>
+                <li><code>/usr/share/applications/battery-manager.desktop</code> : lanceur menu</li>
+                <li><code>/usr/share/pixmaps/battery-manager.png</code> : icône</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Compatibilité</h2>
+            <p>L'application fonctionne sur les ordinateurs portables dont le noyau Linux expose les fichiers de contrôle de charge dans <code>/sys/class/power_supply/BAT*/</code>.</p>
+            
+            <h3>Chemins supportés :</h3>
+            <ul>
+                <li><code>charge_control_start_threshold</code> / <code>charge_control_end_threshold</code></li>
+                <li><code>charge_start_threshold</code> / <code>charge_stop_threshold</code></li>
+                <li><code>charge_end_threshold</code></li>
+            </ul>
+            
+            <div class="info">
+                <strong>Vérification :</strong> Fonctionnera si votre ordinateur portable expose ces fichiers via sysfs. Vérifiez avec <code>ls /sys/class/power_supply/BAT0/</code> pour voir ce qui est disponible sur votre système.
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Limitations</h2>
+            <div class="warning">
+                <ul>
+                    <li>Nécessite un support matériel et noyau approprié</li>
+                    <li>Certains fabricants n'exposent qu'un seul seuil (fin de charge uniquement)</li>
+                    <li>L'application ne peut pas créer de support là où le matériel/noyau ne le fournit pas</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Licence</h2>
+            <p>MIT - voir <a href="LICENSE">LICENSE</a></p>
+        </div>
+    </div>
+</body>
+</html>

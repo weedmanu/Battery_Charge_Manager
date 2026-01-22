@@ -153,16 +153,17 @@ chmod 755 "${DEB_DIR}/DEBIAN/postrm"
 echo -e "${GREEN}✓${NC} Fichiers DEBIAN créés"
 
 # Créer la structure de fichiers
-mkdir -p "${DEB_DIR}/usr/local/bin"
+mkdir -p "${DEB_DIR}/usr/bin"
 mkdir -p "${DEB_DIR}/usr/share/applications"
 mkdir -p "${DEB_DIR}/usr/share/pixmaps"
-mkdir -p "${DEB_DIR}/etc/systemd/system"
+mkdir -p "${DEB_DIR}/lib/systemd/system"
+mkdir -p "${DEB_DIR}/etc/battery-manager"
 mkdir -p "${DEB_DIR}/usr/share/doc/${APP_NAME}"
 
 # Copier le binaire
 echo -e "${BLUE}Copie des fichiers...${NC}"
-cp target/release/battery_manager "${DEB_DIR}/usr/local/bin/battery-manager"
-chmod 755 "${DEB_DIR}/usr/local/bin/battery-manager"
+cp target/release/battery_manager "${DEB_DIR}/usr/bin/battery-manager"
+chmod 755 "${DEB_DIR}/usr/bin/battery-manager"
 echo -e "${GREEN}✓${NC} Binaire copié"
 
 # Copier l'icône
@@ -171,8 +172,8 @@ chmod 644 "${DEB_DIR}/usr/share/pixmaps/battery-manager.png"
 echo -e "${GREEN}✓${NC} Icône copiée"
 
 # Copier le script de restauration
-cp resources/battery-manager-restore.sh "${DEB_DIR}/usr/local/bin/battery-manager-restore"
-chmod 755 "${DEB_DIR}/usr/local/bin/battery-manager-restore"
+cp resources/battery-manager-restore.sh "${DEB_DIR}/usr/bin/battery-manager-restore"
+chmod 755 "${DEB_DIR}/usr/bin/battery-manager-restore"
 echo -e "${GREEN}✓${NC} Script de restauration copié"
 
 # Copier le fichier .desktop
@@ -181,9 +182,13 @@ chmod 644 "${DEB_DIR}/usr/share/applications/battery-manager.desktop"
 echo -e "${GREEN}✓${NC} Fichier .desktop copié"
 
 # Copier le service systemd
-cp resources/battery-manager.service "${DEB_DIR}/etc/systemd/system/"
-chmod 644 "${DEB_DIR}/etc/systemd/system/battery-manager.service"
+cp resources/battery-manager.service "${DEB_DIR}/lib/systemd/system/"
+chmod 644 "${DEB_DIR}/lib/systemd/system/battery-manager.service"
 echo -e "${GREEN}✓${NC} Service systemd copié"
+
+# Créer le répertoire de configuration
+mkdir -p "${DEB_DIR}/etc/battery-manager"
+echo -e "${GREEN}✓${NC} Répertoire de configuration créé"
 
 # Créer la documentation
 cat > "${DEB_DIR}/usr/share/doc/${APP_NAME}/copyright" << 'EOF'
