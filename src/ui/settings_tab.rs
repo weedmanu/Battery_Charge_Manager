@@ -470,7 +470,7 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
                             let persistence_note = if enable_service {
                                 String::new()
                             } else {
-                                format!("<br/><span size='small'>{}</span>", t("warning_not_persistent"))
+                                format!("\n<span size='small'>{}</span>", t("warning_not_persistent"))
                             };
                             status_message.set_markup(&format!(
                                 "<span>✓ {}: {}, {}: {:.1}%, {}: {}{}</span>",
