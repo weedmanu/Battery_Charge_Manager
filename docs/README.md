@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-40%2F40_passing-success.svg)](#tests)
 [![Quality](https://img.shields.io/badge/Clippy-0_warnings-success.svg)](#qualit%C3%A9-aaa)
-[![Code](https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg)](#structure-du-projet)
+[![Code](https://img.shields.io/badge/Lines-4726_Rust-blueviolet.svg)](#structure-du-projet)
 
 ---
 
@@ -22,7 +22,7 @@
 - **Visualisation en temps réel** : charge, santé, voltage, puissance, cycles
 - **Configuration des seuils** : début et fin de charge (0-100%)
 - **Persistance optionnelle** : restauration au démarrage via systemd (si activé)
-- **Support multi-fabricants** : ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo
+- **Support multi-fabricants** : ASUS, Lenovo/ThinkPad, Dell, Huawei, Samsung, System76, Tuxedo, Sony, LG, MSI, Toshiba, MacBook
 
 ### 🌍 Internationalisation
 
@@ -73,7 +73,7 @@ Installation complète avec icône, raccourci menu et service systemd :
 
 ```bash
 # Télécharger le .deb depuis les releases GitHub
-sudo dpkg -i battery-manager_0.9.8_amd64.deb
+sudo dpkg -i battery-manager_1.0.0_amd64.deb
 ```
 
 **Le package .deb installe automatiquement :**
@@ -88,14 +88,14 @@ sudo dpkg -i battery-manager_0.9.8_amd64.deb
 Installation manuelle du service uniquement (sans raccourci menu) :
 
 ```bash
-git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+git clone https://github.com/weedmanu/Battery_Manager.git
 cd Battery_Manager
 cargo build --release
 cd install
-sudo ./install.sh      # Installe uniquement le service systemd
+sudo ./install.sh      # Installe binaire, service, raccourci menu et docs
 ```
 
-> **Note** : `install.sh` est conçu pour le développement. Il n'installe PAS le raccourci menu ni l'icône. Pour une installation complète utilisateur, utilisez le package `.deb`.
+> **Note** : `install.sh` installe le binaire, le service systemd, le raccourci .desktop et la documentation. Pour une installation complète avec icône et résolution des dépendances, utilisez le package `.deb`.
 
 ---
 
@@ -179,9 +179,9 @@ journalctl -u battery-manager.service -b --no-pager
 
 ### 3) À quoi servent les scripts dans `install/` ?
 
-- `install/install.sh` : installe **binaire + restore script + service systemd** (mode dev, sans menu/icon)
+- `install/install.sh` : installe **binaire + script de restauration + service systemd + raccourci .desktop + documentation**
 - `install/uninstall.sh` : supprime ces fichiers (conserve `/etc/battery-manager/`)
-- `install/build-deb.sh` : construit le package `.deb` (installation utilisateur complète)
+- `install/build-deb.sh` : construit le package `.deb` (installation utilisateur complète avec icône)
 
 ---
 
@@ -201,10 +201,15 @@ sudo ./uninstall.sh
 ## 📂 Structure du projet
 
 ```
-Battery_Manager/                        # 7 directories, 35 files
+Battery_Manager/
+├── .editorconfig
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # CI GitHub Actions
 ├── Cargo.lock
 ├── Cargo.toml
-├── docs
+├── CHANGELOG.md
+├── docs/
 │   ├── generate_docs.py
 │   ├── icon.png
 │   ├── README.html
@@ -212,19 +217,20 @@ Battery_Manager/                        # 7 directories, 35 files
 │   ├── REFERENCES.html
 │   ├── REFERENCES.md
 │   └── style.css
-├── install
+├── install/
 │   ├── build-deb.sh
 │   ├── install.sh
 │   └── uninstall.sh
 ├── LICENSE
 ├── README.md
-├── resources
+├── resources/
 │   ├── battery-manager.desktop
 │   ├── battery-manager-restore.sh
 │   ├── battery-manager.service
 │   └── icon.png
-└── src                                 # Code source Rust (3473 lignes, 17 fichiers)
-    ├── core
+├── rustfmt.toml
+└── src/                                # Code source Rust (4726 lignes, 17 fichiers)
+    ├── core/
     │   ├── battery.rs
     │   ├── debug.rs
     │   ├── i18n.rs
@@ -234,7 +240,7 @@ Battery_Manager/                        # 7 directories, 35 files
     │   ├── traits.rs
     │   └── vendor_detection.rs
     ├── main.rs
-    └── ui
+    └── ui/
         ├── app.rs
         ├── components.rs
         ├── info_tab.rs
@@ -250,7 +256,7 @@ Battery_Manager/                        # 7 directories, 35 files
 ```
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Rust                            17            564            618           3473
+Rust                            17            ~600           ~650          4726
 -------------------------------------------------------------------------------
 ```
 
@@ -427,12 +433,12 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ## 📞 Support
 
-- **Issues** : [GitHub Issues](https://github.com/weedmanu/Battery_Charge_Manager/issues)
-- **Discussions** : [GitHub Discussions](https://github.com/weedmanu/Battery_Charge_Manager/discussions)
+- **Issues** : [GitHub Issues](https://github.com/weedmanu/Battery_Manager/issues)
+- **Discussions** : [GitHub Discussions](https://github.com/weedmanu/Battery_Manager/discussions)
 
 ---
 
-**Made with ❤️ in Rust** | Version 0.9.8
+**Made with ❤️ in Rust** | Version 1.0.0
 
 <!-- END:FR -->
 
@@ -451,7 +457,7 @@ Les contributions sont les bienvenues ! Pour contribuer :
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-40%2F40_passing-success.svg)](#tests)
 [![Quality](https://img.shields.io/badge/Clippy-0_warnings-success.svg)](#aaa-quality)
-[![Code](https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg)](#project-structure)
+[![Code](https://img.shields.io/badge/Lines-4726_Rust-blueviolet.svg)](#project-structure)
 
 ---
 
@@ -462,7 +468,7 @@ Les contributions sont les bienvenues ! Pour contribuer :
 - **Real-time view**: charge, health, voltage, power, cycles
 - **Threshold configuration**: start/stop charge (0-100%)
 - **Optional persistence**: restored at boot via systemd (if enabled)
-- **Multi-vendor support**: ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo
+- **Multi-vendor support**: ASUS, Lenovo/ThinkPad, Dell, Huawei, Samsung, System76, Tuxedo, Sony, LG, MSI, Toshiba, MacBook
 
 ### 🌍 Internationalization
 
@@ -512,22 +518,22 @@ Simple desktop app to view battery information and configure charge thresholds o
 Full install with menu entry, icon, and systemd service:
 
 ```bash
-sudo dpkg -i battery-manager_0.9.8_amd64.deb
+sudo dpkg -i battery-manager_1.0.0_amd64.deb
 ```
 
 ### Developers
 
-Manual service install (no menu entry/icon):
+Manual install (binary + service + desktop entry + docs):
 
 ```bash
-git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+git clone https://github.com/weedmanu/Battery_Manager.git
 cd Battery_Manager
 cargo build --release
 cd install
 sudo ./install.sh
 ```
 
-> Note: `install.sh` is developer-oriented. For a full user install, use the `.deb` package.
+> Note: `install.sh` installs the binary, systemd service, .desktop shortcut, and documentation. For a full install with icon and dependency resolution, use the `.deb` package.
 
 ---
 
@@ -611,9 +617,9 @@ journalctl -u battery-manager.service -b --no-pager
 
 ### 3) What are the scripts in `install/`?
 
-- `install/install.sh`: installs **binary + restore script + systemd service** (dev mode, no menu/icon)
+- `install/install.sh`: installs **binary + restore script + systemd service + .desktop shortcut + documentation**
 - `install/uninstall.sh`: removes those files (keeps `/etc/battery-manager/`)
-- `install/build-deb.sh`: builds the `.deb` package (full end-user install)
+- `install/build-deb.sh`: builds the `.deb` package (full end-user install with icon)
 
 ---
 
@@ -631,31 +637,41 @@ sudo ./uninstall.sh
 ## 📂 Project structure
 
 ```
-Battery_Manager/                        # 7 directories, 16 files
-├── Cargo.toml                          # Rust deps (GTK4, serde)
-├── Cargo.lock                          # Locked dependency versions
+Battery_Manager/
+├── .editorconfig
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # GitHub Actions CI
+├── Cargo.lock
+├── Cargo.toml                          # Rust deps (GTK4, glib, dirs, libc)
+├── CHANGELOG.md
 ├── LICENSE                             # MIT
-├── README.md                           # Main documentation (Markdown)
-├── README.html                         # Main documentation (HTML)
-├── REFERENCES.md                       # References (Markdown)
-├── REFERENCES.html                     # References (HTML)
+├── README.md
+├── rustfmt.toml
 ├── docs/
-│   └── style.css                       # Modern docs CSS (menu + theme + FR/EN)
-│
+│   ├── generate_docs.py
+│   ├── icon.png
+│   ├── README.html / README.md
+│   ├── REFERENCES.html / REFERENCES.md
+│   └── style.css
 ├── install/
 │   ├── build-deb.sh
 │   ├── install.sh
 │   └── uninstall.sh
-│
 ├── resources/
 │   ├── battery-manager.desktop
 │   ├── battery-manager-restore.sh
 │   ├── battery-manager.service
 │   └── icon.png
-│
-└── src/                                # Rust source (2728 LOC, 17 files)
+└── src/                                # Rust source (4726 LOC, 17 files)
     ├── core/
+    │   ├── battery.rs, debug.rs, i18n.rs, mod.rs
+    │   ├── peripheral.rs, power_supply.rs
+    │   ├── traits.rs, vendor_detection.rs
     ├── ui/
+    │   ├── app.rs, components.rs, info_tab.rs, mod.rs
+    │   ├── peripherals_tab.rs, settings_tab.rs
+    │   ├── theme.rs, ui_tab.rs
     └── main.rs
 ```
 
@@ -664,7 +680,7 @@ Battery_Manager/                        # 7 directories, 16 files
 ```
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Rust                            17            453            578           2728
+Rust                            17            ~600           ~650          4726
 -------------------------------------------------------------------------------
 ```
 

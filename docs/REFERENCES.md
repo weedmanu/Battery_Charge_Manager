@@ -242,12 +242,14 @@ cargo build --release
 ```toml
 [package]
 name = "battery_manager"
-version = "0.9.8"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
 gtk4 = "0.10"
+glib = "0.21"
 dirs = "6.0"
+libc = "0.2"
 
 [profile.release]
 opt-level = 3
@@ -493,12 +495,14 @@ cargo build --release
 ```toml
 [package]
 name = "battery_manager"
-version = "0.9.8"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
 gtk4 = "0.10"
+glib = "0.21"
 dirs = "6.0"
+libc = "0.2"
 
 [profile.release]
 opt-level = 3

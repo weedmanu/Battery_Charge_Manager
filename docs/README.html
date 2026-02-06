@@ -182,7 +182,7 @@
 <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
 <a href="#tests"><img alt="Tests" src="https://img.shields.io/badge/Tests-40%2F40_passing-success.svg" /></a>
 <a href="#qualit%C3%A9-aaa"><img alt="Quality" src="https://img.shields.io/badge/Clippy-0_warnings-success.svg" /></a>
-<a href="#structure-du-projet"><img alt="Code" src="https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg" /></a></p>
+<a href="#structure-du-projet"><img alt="Code" src="https://img.shields.io/badge/Lines-4726_Rust-blueviolet.svg" /></a></p>
 <hr />
 <h2 id="fonctionnalites">✨ Fonctionnalités<a class="headerlink" href="#fonctionnalites" title="Permanent link">&para;</a></h2>
 <h3 id="gestion-de-batterie">🔋 Gestion de batterie<a class="headerlink" href="#gestion-de-batterie" title="Permanent link">&para;</a></h3>
@@ -190,7 +190,7 @@
 <li><strong>Visualisation en temps réel</strong> : charge, santé, voltage, puissance, cycles</li>
 <li><strong>Configuration des seuils</strong> : début et fin de charge (0-100%)</li>
 <li><strong>Persistance optionnelle</strong> : restauration au démarrage via systemd (si activé)</li>
-<li><strong>Support multi-fabricants</strong> : ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo</li>
+<li><strong>Support multi-fabricants</strong> : ASUS, Lenovo/ThinkPad, Dell, Huawei, Samsung, System76, Tuxedo, Sony, LG, MSI, Toshiba, MacBook</li>
 </ul>
 <h3 id="internationalisation">🌍 Internationalisation<a class="headerlink" href="#internationalisation" title="Permanent link">&para;</a></h3>
 <ul>
@@ -232,7 +232,7 @@
 <h3 id="pour-les-utilisateurs-recommande">Pour les utilisateurs (recommandé)<a class="headerlink" href="#pour-les-utilisateurs-recommande" title="Permanent link">&para;</a></h3>
 <p>Installation complète avec icône, raccourci menu et service systemd :</p>
 <pre><code class="language-bash"># Télécharger le .deb depuis les releases GitHub
-sudo dpkg -i battery-manager_0.9.8_amd64.deb
+sudo dpkg -i battery-manager_1.0.0_amd64.deb
 </code></pre>
 <p><strong>Le package .deb installe automatiquement :</strong></p>
 <ul>
@@ -243,14 +243,14 @@ sudo dpkg -i battery-manager_0.9.8_amd64.deb
 </ul>
 <h3 id="pour-les-developpeurs">Pour les développeurs<a class="headerlink" href="#pour-les-developpeurs" title="Permanent link">&para;</a></h3>
 <p>Installation manuelle du service uniquement (sans raccourci menu) :</p>
-<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Manager.git
 cd Battery_Manager
 cargo build --release
 cd install
-sudo ./install.sh      # Installe uniquement le service systemd
+sudo ./install.sh      # Installe binaire, service, raccourci menu et docs
 </code></pre>
 <blockquote>
-<p><strong>Note</strong> : <code>install.sh</code> est conçu pour le développement. Il n'installe PAS le raccourci menu ni l'icône. Pour une installation complète utilisateur, utilisez le package <code>.deb</code>.</p>
+<p><strong>Note</strong> : <code>install.sh</code> installe le binaire, le service systemd, le raccourci .desktop et la documentation. Pour une installation complète avec icône et résolution des dépendances, utilisez le package <code>.deb</code>.</p>
 </blockquote>
 <hr />
 <h2 id="utilisation">🚀 Utilisation<a class="headerlink" href="#utilisation" title="Permanent link">&para;</a></h2>
@@ -315,9 +315,9 @@ journalctl -u battery-manager.service -b --no-pager
 </code></pre>
 <h3 id="3-a-quoi-servent-les-scripts-dans-install">3) À quoi servent les scripts dans <code>install/</code> ?<a class="headerlink" href="#3-a-quoi-servent-les-scripts-dans-install" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>install/install.sh</code> : installe <strong>binaire + restore script + service systemd</strong> (mode dev, sans menu/icon)</li>
+<li><code>install/install.sh</code> : installe <strong>binaire + script de restauration + service systemd + raccourci .desktop + documentation</strong></li>
 <li><code>install/uninstall.sh</code> : supprime ces fichiers (conserve <code>/etc/battery-manager/</code>)</li>
-<li><code>install/build-deb.sh</code> : construit le package <code>.deb</code> (installation utilisateur complète)</li>
+<li><code>install/build-deb.sh</code> : construit le package <code>.deb</code> (installation utilisateur complète avec icône)</li>
 </ul>
 <hr />
 <h2 id="desinstallation">🗑️ Désinstallation<a class="headerlink" href="#desinstallation" title="Permanent link">&para;</a></h2>
@@ -330,10 +330,15 @@ sudo ./uninstall.sh
 </code></pre>
 <hr />
 <h2 id="structure-du-projet">📂 Structure du projet<a class="headerlink" href="#structure-du-projet" title="Permanent link">&para;</a></h2>
-<pre><code>Battery_Manager/                        # 7 directories, 35 files
+<pre><code>Battery_Manager/
+├── .editorconfig
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # CI GitHub Actions
 ├── Cargo.lock
 ├── Cargo.toml
-├── docs
+├── CHANGELOG.md
+├── docs/
 │   ├── generate_docs.py
 │   ├── icon.png
 │   ├── README.html
@@ -341,19 +346,20 @@ sudo ./uninstall.sh
 │   ├── REFERENCES.html
 │   ├── REFERENCES.md
 │   └── style.css
-├── install
+├── install/
 │   ├── build-deb.sh
 │   ├── install.sh
 │   └── uninstall.sh
 ├── LICENSE
 ├── README.md
-├── resources
+├── resources/
 │   ├── battery-manager.desktop
 │   ├── battery-manager-restore.sh
 │   ├── battery-manager.service
 │   └── icon.png
-└── src                                 # Code source Rust (3473 lignes, 17 fichiers)
-    ├── core
+├── rustfmt.toml
+└── src/                                # Code source Rust (4726 lignes, 17 fichiers)
+    ├── core/
     │   ├── battery.rs
     │   ├── debug.rs
     │   ├── i18n.rs
@@ -363,7 +369,7 @@ sudo ./uninstall.sh
     │   ├── traits.rs
     │   └── vendor_detection.rs
     ├── main.rs
-    └── ui
+    └── ui/
         ├── app.rs
         ├── components.rs
         ├── info_tab.rs
@@ -376,7 +382,7 @@ sudo ./uninstall.sh
 <h3 id="statistiques-du-code">Statistiques du code<a class="headerlink" href="#statistiques-du-code" title="Permanent link">&para;</a></h3>
 <pre><code>Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Rust                            17            564            618           3473
+Rust                            17            ~600           ~650          4726
 -------------------------------------------------------------------------------
 </code></pre>
 <h3 id="fichiers-de-configuration-systeme">Fichiers de configuration système<a class="headerlink" href="#fichiers-de-configuration-systeme" title="Permanent link">&para;</a></h3>
@@ -543,11 +549,11 @@ cargo build --release         # Compiler en mode release
 <hr />
 <h2 id="support">📞 Support<a class="headerlink" href="#support" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Issues</strong> : <a href="https://github.com/weedmanu/Battery_Charge_Manager/issues">GitHub Issues</a></li>
-<li><strong>Discussions</strong> : <a href="https://github.com/weedmanu/Battery_Charge_Manager/discussions">GitHub Discussions</a></li>
+<li><strong>Issues</strong> : <a href="https://github.com/weedmanu/Battery_Manager/issues">GitHub Issues</a></li>
+<li><strong>Discussions</strong> : <a href="https://github.com/weedmanu/Battery_Manager/discussions">GitHub Discussions</a></li>
 </ul>
 <hr />
-<p><strong>Made with ❤️ in Rust</strong> | Version 0.9.8</p></div>
+<p><strong>Made with ❤️ in Rust</strong> | Version 1.0.0</p></div>
         <div class="lang lang-en"><h1 id="battery-manager">Battery Manager<a class="headerlink" href="#battery-manager" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>Battery charge threshold manager for Linux laptops with a GTK4 UI</p>
@@ -558,7 +564,7 @@ cargo build --release         # Compiler en mode release
 <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
 <a href="#tests"><img alt="Tests" src="https://img.shields.io/badge/Tests-40%2F40_passing-success.svg" /></a>
 <a href="#aaa-quality"><img alt="Quality" src="https://img.shields.io/badge/Clippy-0_warnings-success.svg" /></a>
-<a href="#project-structure"><img alt="Code" src="https://img.shields.io/badge/Lines-3473_Rust-blueviolet.svg" /></a></p>
+<a href="#project-structure"><img alt="Code" src="https://img.shields.io/badge/Lines-4726_Rust-blueviolet.svg" /></a></p>
 <hr />
 <h2 id="features">✨ Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <h3 id="battery-management">🔋 Battery management<a class="headerlink" href="#battery-management" title="Permanent link">&para;</a></h3>
@@ -566,7 +572,7 @@ cargo build --release         # Compiler en mode release
 <li><strong>Real-time view</strong>: charge, health, voltage, power, cycles</li>
 <li><strong>Threshold configuration</strong>: start/stop charge (0-100%)</li>
 <li><strong>Optional persistence</strong>: restored at boot via systemd (if enabled)</li>
-<li><strong>Multi-vendor support</strong>: ASUS, Lenovo, Dell, Huawei, Samsung, System76, Tuxedo</li>
+<li><strong>Multi-vendor support</strong>: ASUS, Lenovo/ThinkPad, Dell, Huawei, Samsung, System76, Tuxedo, Sony, LG, MSI, Toshiba, MacBook</li>
 </ul>
 <h3 id="internationalization">🌍 Internationalization<a class="headerlink" href="#internationalization" title="Permanent link">&para;</a></h3>
 <ul>
@@ -607,18 +613,18 @@ cargo build --release         # Compiler en mode release
 <h2 id="installation">📦 Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <h3 id="end-users-recommended">End users (recommended)<a class="headerlink" href="#end-users-recommended" title="Permanent link">&para;</a></h3>
 <p>Full install with menu entry, icon, and systemd service:</p>
-<pre><code class="language-bash">sudo dpkg -i battery-manager_0.9.8_amd64.deb
+<pre><code class="language-bash">sudo dpkg -i battery-manager_1.0.0_amd64.deb
 </code></pre>
 <h3 id="developers">Developers<a class="headerlink" href="#developers" title="Permanent link">&para;</a></h3>
-<p>Manual service install (no menu entry/icon):</p>
-<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Charge_Manager.git
+<p>Manual install (binary + service + desktop entry + docs):</p>
+<pre><code class="language-bash">git clone https://github.com/weedmanu/Battery_Manager.git
 cd Battery_Manager
 cargo build --release
 cd install
 sudo ./install.sh
 </code></pre>
 <blockquote>
-<p>Note: <code>install.sh</code> is developer-oriented. For a full user install, use the <code>.deb</code> package.</p>
+<p>Note: <code>install.sh</code> installs the binary, systemd service, .desktop shortcut, and documentation. For a full install with icon and dependency resolution, use the <code>.deb</code> package.</p>
 </blockquote>
 <hr />
 <h2 id="usage">🚀 Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
@@ -683,9 +689,9 @@ journalctl -u battery-manager.service -b --no-pager
 </code></pre>
 <h3 id="3-what-are-the-scripts-in-install">3) What are the scripts in <code>install/</code>?<a class="headerlink" href="#3-what-are-the-scripts-in-install" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>install/install.sh</code>: installs <strong>binary + restore script + systemd service</strong> (dev mode, no menu/icon)</li>
+<li><code>install/install.sh</code>: installs <strong>binary + restore script + systemd service + .desktop shortcut + documentation</strong></li>
 <li><code>install/uninstall.sh</code>: removes those files (keeps <code>/etc/battery-manager/</code>)</li>
-<li><code>install/build-deb.sh</code>: builds the <code>.deb</code> package (full end-user install)</li>
+<li><code>install/build-deb.sh</code>: builds the <code>.deb</code> package (full end-user install with icon)</li>
 </ul>
 <hr />
 <h2 id="uninstall">🗑️ Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h2>
@@ -696,37 +702,47 @@ sudo ./uninstall.sh
 </code></pre>
 <hr />
 <h2 id="project-structure">📂 Project structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
-<pre><code>Battery_Manager/                        # 7 directories, 16 files
-├── Cargo.toml                          # Rust deps (GTK4, serde)
-├── Cargo.lock                          # Locked dependency versions
+<pre><code>Battery_Manager/
+├── .editorconfig
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # GitHub Actions CI
+├── Cargo.lock
+├── Cargo.toml                          # Rust deps (GTK4, glib, dirs, libc)
+├── CHANGELOG.md
 ├── LICENSE                             # MIT
-├── README.md                           # Main documentation (Markdown)
-├── README.html                         # Main documentation (HTML)
-├── REFERENCES.md                       # References (Markdown)
-├── REFERENCES.html                     # References (HTML)
+├── README.md
+├── rustfmt.toml
 ├── docs/
-│   └── style.css                       # Modern docs CSS (menu + theme + FR/EN)
-│
+│   ├── generate_docs.py
+│   ├── icon.png
+│   ├── README.html / README.md
+│   ├── REFERENCES.html / REFERENCES.md
+│   └── style.css
 ├── install/
 │   ├── build-deb.sh
 │   ├── install.sh
 │   └── uninstall.sh
-│
 ├── resources/
 │   ├── battery-manager.desktop
 │   ├── battery-manager-restore.sh
 │   ├── battery-manager.service
 │   └── icon.png
-│
-└── src/                                # Rust source (2728 LOC, 17 files)
+└── src/                                # Rust source (4726 LOC, 17 files)
     ├── core/
+    │   ├── battery.rs, debug.rs, i18n.rs, mod.rs
+    │   ├── peripheral.rs, power_supply.rs
+    │   ├── traits.rs, vendor_detection.rs
     ├── ui/
+    │   ├── app.rs, components.rs, info_tab.rs, mod.rs
+    │   ├── peripherals_tab.rs, settings_tab.rs
+    │   ├── theme.rs, ui_tab.rs
     └── main.rs
 </code></pre>
 <h3 id="code-stats">Code stats<a class="headerlink" href="#code-stats" title="Permanent link">&para;</a></h3>
 <pre><code>Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Rust                            17            453            578           2728
+Rust                            17            ~600           ~650          4726
 -------------------------------------------------------------------------------
 </code></pre>
 <hr />

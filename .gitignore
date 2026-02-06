@@ -21,6 +21,7 @@ Thumbs.db
 
 # Docs sources (package ships only HTML)
 /docs/*.py
+/docs/icon.png
 
 # Logs
 *.log
