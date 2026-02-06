@@ -27,6 +27,8 @@ echo "Suppression des fichiers..."
 rm -f /usr/bin/battery-manager
 rm -f /usr/bin/battery-manager-restore
 rm -f /lib/systemd/system/battery-manager.service
+rm -f /usr/share/applications/battery-manager.desktop
+rm -rf /usr/share/battery-manager
 
 # Recharger systemd
 echo "Rechargement de systemd..."

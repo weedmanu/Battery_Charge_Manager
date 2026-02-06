@@ -25,7 +25,7 @@ impl std::fmt::Display for BatteryError {
             Self::InvalidBatteryName(name) => {
                 write!(
                     f,
-                    "Nom de batterie invalide: '{name}'. Le nom doit commencer par 'BAT'."
+                    "Invalid battery name: '{name}'. Name must start with 'BAT'."
                 )
             }
             Self::IoError(e) => write!(f, "I/O Error: {e}"),
@@ -117,15 +117,15 @@ impl BatteryInfo {
         let name = battery_name.to_string();
 
         let manufacturer = Self::read_sys_file(&format!("{base_path}/manufacturer"))
-            .unwrap_or_else(|| "Inconnu".to_string());
-        let model_name = Self::read_sys_file(&format!("{base_path}/model_name"))
-            .unwrap_or_else(|| "Inconnu".to_string());
-        let technology = Self::read_sys_file(&format!("{base_path}/technology"))
-            .unwrap_or_else(|| "Inconnu".to_string());
-        let status = Self::read_sys_file(&format!("{base_path}/status"))
-            .unwrap_or_else(|| "Inconnu".to_string());
+            .unwrap_or_else(|| t("unknown"));
+        let model_name =
+            Self::read_sys_file(&format!("{base_path}/model_name")).unwrap_or_else(|| t("unknown"));
+        let technology =
+            Self::read_sys_file(&format!("{base_path}/technology")).unwrap_or_else(|| t("unknown"));
+        let status =
+            Self::read_sys_file(&format!("{base_path}/status")).unwrap_or_else(|| t("unknown"));
         let capacity_level = Self::read_sys_file(&format!("{base_path}/capacity_level"))
-            .unwrap_or_else(|| "Inconnu".to_string());
+            .unwrap_or_else(|| t("unknown"));
 
         let capacity_percent = Self::read_sys_file(&format!("{base_path}/capacity"))
             .and_then(|s| s.parse().ok())
@@ -411,9 +411,9 @@ impl BatteryInfo {
             let hours = minutes / 60;
             let mins = minutes % 60;
             if self.status == "Charging" {
-                format!("⏱ {hours}h{mins:02} jusqu'à plein")
+                format!("⏱ {hours}h{mins:02} {}", t("time_until_full"))
             } else {
-                format!("⏱ {hours}h{mins:02} restant")
+                format!("⏱ {hours}h{mins:02} {}", t("time_remaining"))
             }
         })
     }
@@ -437,9 +437,15 @@ impl BatteryInfo {
     /// Pango markup string (green "Active" or red "Inactive")
     pub fn service_status_markup(&self) -> String {
         if self.service_active {
-            "<span size='xx-large' weight='bold'>Actif</span>".to_string()
+            format!(
+                "<span size='xx-large' weight='bold'>{}</span>",
+                t("service_active")
+            )
         } else {
-            "<span size='xx-large' weight='bold'>Inactif</span>".to_string()
+            format!(
+                "<span size='xx-large' weight='bold'>{}</span>",
+                t("service_inactive")
+            )
         }
     }
 
@@ -778,9 +784,11 @@ mod tests {
             service_active: true,
         };
 
-        assert!(info.service_status_markup().contains("Actif"));
+        assert!(info.service_status_markup().contains(&t("service_active")));
 
         info.service_active = false;
-        assert!(info.service_status_markup().contains("Inactif"));
+        assert!(info
+            .service_status_markup()
+            .contains(&t("service_inactive")));
     }
 }

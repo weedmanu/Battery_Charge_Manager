@@ -7,7 +7,7 @@ set -e
 APP_NAME="battery-manager"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(awk -F'"' '/^version = / {print $2; exit}' "${PROJECT_ROOT}/Cargo.toml")"
-ARCH="amd64"
+ARCH="$(dpkg --print-architecture 2>/dev/null || echo 'amd64')"
 MAINTAINER="Battery Manager Team <battery-manager@example.com>"
 DESCRIPTION="Battery charge threshold manager for laptops with peripheral battery support"
 PACKAGE_NAME="${APP_NAME}_${VERSION}_${ARCH}"

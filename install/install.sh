@@ -46,6 +46,20 @@ chmod +x /usr/bin/battery-manager-restore
 echo "Installation du service systemd..."
 cp "${PROJECT_ROOT}/resources/battery-manager.service" /lib/systemd/system/
 
+# Copier le fichier .desktop
+echo "Installation du raccourci bureau..."
+mkdir -p /usr/share/applications
+cp "${PROJECT_ROOT}/resources/battery-manager.desktop" /usr/share/applications/
+
+# Copier la documentation
+echo "Installation de la documentation..."
+mkdir -p /usr/share/battery-manager/docs
+if [ -d "${PROJECT_ROOT}/docs" ]; then
+    cp "${PROJECT_ROOT}/docs/README.html" /usr/share/battery-manager/docs/ 2>/dev/null || true
+    cp "${PROJECT_ROOT}/docs/REFERENCES.html" /usr/share/battery-manager/docs/ 2>/dev/null || true
+    cp "${PROJECT_ROOT}/docs/style.css" /usr/share/battery-manager/docs/ 2>/dev/null || true
+fi
+
 # Recharger systemd
 echo "Rechargement de systemd..."
 systemctl daemon-reload
@@ -53,6 +67,11 @@ systemctl daemon-reload
 # Activer le service
 echo "Activation du service au démarrage..."
 systemctl enable battery-manager.service
+
+# Mettre à jour la base de données des applications
+if command -v update-desktop-database > /dev/null 2>&1; then
+    update-desktop-database /usr/share/applications || true
+fi
 
 echo -e "\n${GREEN}✓ Installation terminée avec succès!${NC}"
 echo -e "\nPour désinstaller, exécutez: sudo ./uninstall.sh"

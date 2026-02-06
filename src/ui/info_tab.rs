@@ -210,7 +210,8 @@ pub fn build_info_tab(
 
     let power_source_value = Label::new(None);
     power_source_value.set_halign(gtk4::Align::Center);
-    power_source_value.set_markup(power_supply.get_power_source_markup());
+    power_source_value.set_markup(&power_supply.get_power_source_markup());
+    power_source_value.add_css_class(power_supply.get_power_source_css_class());
     power_box.append(&power_source_value);
 
     // Espaceur pour pousser les infos secondaires vers le bas

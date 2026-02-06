@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Install GTK4 development libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libglib2.0-dev
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Clippy (pedantic)
+        run: cargo clippy --all-targets -- -D warnings -W clippy::pedantic
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Run tests
+        run: cargo test --verbose
+
+  build-deb:
+    name: Build .deb package
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install GTK4 development libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libglib2.0-dev
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Build .deb package
+        run: |
+          cd install
+          bash build-deb.sh
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery-manager-deb
+          path: target/deb/*.deb
+          retention-days: 30

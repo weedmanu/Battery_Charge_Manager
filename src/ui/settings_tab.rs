@@ -5,6 +5,7 @@
 
 use gtk4::prelude::*;
 use gtk4::{Adjustment, Box, Button, Label, Orientation, ScrolledWindow, SpinButton, Switch};
+use std::fmt::Write;
 use std::path::Path;
 use std::process::Command;
 
@@ -20,6 +21,214 @@ fn service_unit_exists() -> bool {
     ]
     .into_iter()
     .any(|p| Path::new(p).is_file())
+}
+
+/// Truncates a string for logging purposes
+fn truncate_for_log(s: &str, max_chars: usize) -> String {
+    if s.chars().count() <= max_chars {
+        return s.to_string();
+    }
+    let mut out = s.chars().take(max_chars).collect::<String>();
+    out.push('…');
+    out
+}
+
+/// Computed alarm value from battery `charge_full`/`energy_full` and percentage
+fn compute_alarm_value(battery_name: &str, alarm_pct: f32) -> String {
+    let charge_full_str = std::fs::read_to_string(format!(
+        "/sys/class/power_supply/{battery_name}/charge_full"
+    ))
+    .or_else(|charge_err| {
+        crate::core::debug::debug_log_args(std::format_args!(
+            "⚠️ [SETTINGS_TAB] charge_full read failed, trying energy_full: {charge_err}"
+        ));
+        std::fs::read_to_string(format!(
+            "/sys/class/power_supply/{battery_name}/energy_full"
+        ))
+    });
+
+    match charge_full_str {
+        Ok(charge_full) => match charge_full.trim().parse::<u64>() {
+            Ok(full_value) => {
+                #[allow(
+                    clippy::cast_precision_loss,
+                    clippy::cast_possible_truncation,
+                    clippy::cast_sign_loss
+                )]
+                let alarm_value = (full_value as f32 * (alarm_pct / 100.0)) as u64;
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "🧮 [SETTINGS_TAB] Alarm computed from full_value={full_value}: alarm_value={alarm_value}"
+                ));
+                alarm_value.to_string()
+            }
+            Err(parse_err) => {
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "⚠️ [SETTINGS_TAB] Failed to parse charge_full/energy_full value: {parse_err} (raw='{}')",
+                    truncate_for_log(charge_full.trim(), 80)
+                ));
+                "0".to_string()
+            }
+        },
+        Err(read_err) => {
+            crate::core::debug::debug_log_args(std::format_args!(
+                "⚠️ [SETTINGS_TAB] Failed to read charge_full/energy_full: {read_err}; falling back to alarm_value=0"
+            ));
+            "0".to_string()
+        }
+    }
+}
+
+/// Builds the shell script to apply thresholds, alarm, and service configuration
+fn build_apply_script(
+    battery_name: &str,
+    start: u8,
+    stop: u8,
+    has_start: bool,
+    alarm_value_str: &str,
+    enable_service: bool,
+) -> String {
+    let base_path = format!("/sys/class/power_supply/{battery_name}");
+    let alarm_path = format!("{base_path}/alarm");
+    let start_paths = [
+        format!("{base_path}/charge_control_start_threshold"),
+        format!("{base_path}/charge_start_threshold"),
+    ];
+    let stop_paths = [
+        format!("{base_path}/charge_control_end_threshold"),
+        format!("{base_path}/charge_stop_threshold"),
+        format!("{base_path}/charge_end_threshold"),
+    ];
+
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🗂️ [SETTINGS_TAB] Sysfs paths: alarm_path='{alarm_path}' exists={}, start_paths_exist=[{}, {}], stop_paths_exist=[{}, {}, {}]",
+        Path::new(&alarm_path).is_file(),
+        Path::new(&start_paths[0]).is_file(),
+        Path::new(&start_paths[1]).is_file(),
+        Path::new(&stop_paths[0]).is_file(),
+        Path::new(&stop_paths[1]).is_file(),
+        Path::new(&stop_paths[2]).is_file(),
+    ));
+
+    let mut script = String::new();
+
+    // Create config directory
+    script.push_str("mkdir -p /etc/battery-manager; ");
+
+    // Write thresholds (values are pre-validated numeric strings)
+    for path in &start_paths {
+        let _ = write!(&mut script, "[ -f {path} ] && echo {start} > {path}; ");
+    }
+    for path in &stop_paths {
+        let _ = write!(&mut script, "[ -f {path} ] && echo {stop} > {path}; ");
+    }
+
+    // Write alarm
+    let _ = write!(
+        &mut script,
+        "[ -f {alarm_path} ] && echo {alarm_value_str} > {alarm_path}; "
+    );
+
+    // Save config (START_THRESHOLD only if supported)
+    let config_content = if has_start {
+        format!("START_THRESHOLD={start}\\nSTOP_THRESHOLD={stop}\\n")
+    } else {
+        format!("STOP_THRESHOLD={stop}\\n")
+    };
+    let _ = write!(
+        &mut script,
+        "echo '{config_content}' > /etc/battery-manager/{battery_name}.conf; "
+    );
+
+    // Manage service
+    if enable_service {
+        script.push_str("systemctl enable battery-manager.service; ");
+        script.push_str("systemctl start battery-manager.service; ");
+    } else {
+        script.push_str("systemctl disable battery-manager.service 2>/dev/null || true; ");
+        script.push_str("systemctl stop battery-manager.service 2>/dev/null || true; ");
+    }
+
+    crate::core::debug::debug_log_args(std::format_args!(
+        "🔧 [SETTINGS_TAB] Prepared script: bytes={}, service_enable={enable_service}",
+        script.len()
+    ));
+
+    script
+}
+
+/// Result of executing settings via pkexec
+enum ApplyResult {
+    /// Settings applied successfully
+    Success,
+    /// pkexec execution failed
+    Failed(String),
+    /// pkexec not installed
+    NoPkexec,
+}
+
+/// Executes the apply script via pkexec and returns the result
+fn execute_with_pkexec(script: &str) -> ApplyResult {
+    let pkexec_check = Command::new("which").arg("pkexec").output();
+
+    match pkexec_check {
+        Ok(result) if result.status.success() => {
+            crate::core::debug::debug_log(
+                "🔐 [SETTINGS_TAB] pkexec found, executing script via pkexec",
+            );
+            let output = Command::new("pkexec")
+                .arg("sh")
+                .arg("-c")
+                .arg(script)
+                .output();
+
+            match output {
+                Ok(result) if result.status.success() => {
+                    crate::core::debug::debug_log("✅ [SETTINGS_TAB] pkexec execution succeeded");
+                    ApplyResult::Success
+                }
+                Ok(result) => {
+                    let stderr = String::from_utf8_lossy(&result.stderr);
+                    let stdout = String::from_utf8_lossy(&result.stdout);
+                    let code = result.status.code();
+                    let stderr_preview = truncate_for_log(stderr.trim(), 400);
+                    let stdout_preview = truncate_for_log(stdout.trim(), 400);
+
+                    let ui_error = if !stderr.trim().is_empty() {
+                        stderr_preview.clone()
+                    } else if !stdout.trim().is_empty() {
+                        stdout_preview.clone()
+                    } else {
+                        format!("pkexec returned non-zero status: {code:?}")
+                    };
+
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "❌ [SETTINGS_TAB] Script execution failed: code={code:?} stdout='{stdout_preview}' stderr='{stderr_preview}'"
+                    ));
+                    ApplyResult::Failed(ui_error)
+                }
+                Err(err) => {
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "❌ [SETTINGS_TAB] Execution error: {err}"
+                    ));
+                    ApplyResult::Failed(format!("{}: {err}", t("error_execution")))
+                }
+            }
+        }
+        _ => {
+            crate::core::debug::debug_log(
+                "❌ [SETTINGS_TAB] pkexec not found (which pkexec failed or returned non-zero)",
+            );
+            ApplyResult::NoPkexec
+        }
+    }
+}
+
+/// Updates the status message label with appropriate color class
+fn set_status_class(label: &Label, class: &str) {
+    label.remove_css_class("color-success");
+    label.remove_css_class("color-warning");
+    label.remove_css_class("color-danger");
+    label.add_css_class(class);
 }
 
 /// Creates vendor information card
@@ -266,17 +475,6 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
             #[weak]
             status_message,
             move |_| {
-            use std::fmt::Write;
-
-            fn truncate_for_log(s: &str, max_chars: usize) -> String {
-                if s.chars().count() <= max_chars {
-                    return s.to_string();
-                }
-                let mut out = s.chars().take(max_chars).collect::<String>();
-                out.push('…');
-                out
-            }
-
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let start = start_spin.as_ref().map_or(0, |s| s.value() as u8);
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
@@ -284,12 +482,10 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
             #[allow(clippy::cast_possible_truncation)]
             let alarm_pct = alarm_spin.value() as f32;
             let enable_service = service_switch.is_active();
+            let has_start = start_spin.is_some();
 
             crate::core::debug::debug_log_args(std::format_args!(
-                "🧾 [SETTINGS_TAB] Apply clicked: start_supported={}, start={}, stop={}, alarm_pct={alarm_pct:.1}, service_enable={enable_service}",
-                start_spin.as_ref().is_some(),
-                start,
-                stop,
+                "🧾 [SETTINGS_TAB] Apply clicked: start_supported={has_start}, start={start}, stop={stop}, alarm_pct={alarm_pct:.1}, service_enable={enable_service}"
             ));
 
             if !enable_service {
@@ -299,233 +495,73 @@ pub fn build_settings_tab(battery_info: &BatteryInfo, current_battery: &str) -> 
             }
 
             // Validation
-            if start_spin.as_ref().is_some()
-                && start >= stop {
-                    status_message.set_markup(&format!(
-                        "<span>{}</span>",
-                        t("error_start_greater_stop")
-                    ));
-                    status_message.add_css_class("color-danger");
-                    crate::core::debug::debug_log_args(std::format_args!(
-                        "❌ [SETTINGS_TAB] Validation error: start ({start}) >= stop ({stop})"
-                    ));
-                    return;
-                }
-
-            // Calculer la valeur d'alarme
-            let charge_full_str = std::fs::read_to_string(format!(
-                "/sys/class/power_supply/{current_battery_clone}/charge_full"
-            ))
-            .or_else(|charge_err| {
-                crate::core::debug::debug_log_args(std::format_args!(
-                    "⚠️ [SETTINGS_TAB] charge_full read failed, trying energy_full: {charge_err}"
+            if has_start && start >= stop {
+                status_message.set_markup(&format!(
+                    "<span>{}</span>",
+                    t("error_start_greater_stop")
                 ));
-                std::fs::read_to_string(format!(
-                    "/sys/class/power_supply/{current_battery_clone}/energy_full"
-                ))
-            });
-
-            let alarm_value_str = match charge_full_str {
-                Ok(charge_full) => match charge_full.trim().parse::<u64>() {
-                    Ok(full_value) => {
-                        #[allow(
-                            clippy::cast_precision_loss,
-                            clippy::cast_possible_truncation,
-                            clippy::cast_sign_loss
-                        )]
-                        let alarm_value = (full_value as f32 * (alarm_pct / 100.0)) as u64;
-                        crate::core::debug::debug_log_args(std::format_args!(
-                            "🧮 [SETTINGS_TAB] Alarm computed from full_value={full_value}: alarm_value={alarm_value}"
-                        ));
-                        alarm_value.to_string()
-                    }
-                    Err(parse_err) => {
-                        crate::core::debug::debug_log_args(std::format_args!(
-                            "⚠️ [SETTINGS_TAB] Failed to parse charge_full/energy_full value: {parse_err} (raw='{}')",
-                            truncate_for_log(charge_full.trim(), 80)
-                        ));
-                        "0".to_string()
-                    }
-                },
-                Err(read_err) => {
-                    crate::core::debug::debug_log_args(std::format_args!(
-                        "⚠️ [SETTINGS_TAB] Failed to read charge_full/energy_full: {read_err}; falling back to alarm_value=0"
-                    ));
-                    "0".to_string()
-                }
-            };
-
-            // Validate numeric inputs to prevent injection
-            // Even though spinbuttons provide numeric values, validate for security
-            if !start.to_string().chars().all(|c| c.is_ascii_digit())
-                || !stop.to_string().chars().all(|c| c.is_ascii_digit())
-                || !alarm_value_str.chars().all(|c| c.is_ascii_digit())
-            {
-                status_message.set_markup(&format!("<span>{}: Invalid numeric values</span>", t("error")));
-                status_message.remove_css_class("color-success");
-                status_message.remove_css_class("color-warning");
-                status_message.add_css_class("color-danger");
-
+                set_status_class(&status_message, "color-danger");
                 crate::core::debug::debug_log_args(std::format_args!(
-                    "❌ [SETTINGS_TAB] Numeric validation failed: start='{start}', stop='{stop}', alarm_value_str='{}'",
+                    "❌ [SETTINGS_TAB] Validation error: start ({start}) >= stop ({stop})"
+                ));
+                return;
+            }
+
+            // Compute alarm value
+            let alarm_value_str = compute_alarm_value(&current_battery_clone, alarm_pct);
+
+            // Validate numeric inputs
+            if !alarm_value_str.chars().all(|c| c.is_ascii_digit()) {
+                status_message.set_markup(&format!("<span>{}: Invalid numeric values</span>", t("error")));
+                set_status_class(&status_message, "color-danger");
+                crate::core::debug::debug_log_args(std::format_args!(
+                    "❌ [SETTINGS_TAB] Numeric validation failed: alarm_value_str='{}'",
                     truncate_for_log(&alarm_value_str, 80)
                 ));
                 return;
             }
 
-            // Build shell script with validated inputs
-            // Note: Values are pre-validated as pure numeric strings
-            let alarm_path = format!("/sys/class/power_supply/{current_battery_clone}/alarm");
+            // Build and execute script
+            let script = build_apply_script(
+                &current_battery_clone,
+                start, stop, has_start,
+                &alarm_value_str,
+                enable_service,
+            );
 
-            // Possible paths for thresholds
-            let base_path = format!("/sys/class/power_supply/{current_battery_clone}");
-            let start_paths = vec![
-                format!("{}/charge_control_start_threshold", base_path),
-                format!("{}/charge_start_threshold", base_path),
-            ];
-            let stop_paths = vec![
-                format!("{}/charge_control_end_threshold", base_path),
-                format!("{}/charge_stop_threshold", base_path),
-                format!("{}/charge_end_threshold", base_path),
-            ];
-
-            crate::core::debug::debug_log_args(std::format_args!(
-                "🗂️ [SETTINGS_TAB] Sysfs paths: alarm_path='{alarm_path}' exists={}, start_paths_exist=[{}, {}], stop_paths_exist=[{}, {}, {}]",
-                Path::new(&alarm_path).is_file(),
-                Path::new(&start_paths[0]).is_file(),
-                Path::new(&start_paths[1]).is_file(),
-                Path::new(&stop_paths[0]).is_file(),
-                Path::new(&stop_paths[1]).is_file(),
-                Path::new(&stop_paths[2]).is_file(),
-            ));
-
-            let mut script = String::new();
-
-            // Create config directory
-            script.push_str("mkdir -p /etc/battery-manager; ");
-
-            // Write thresholds (values are pre-validated numeric strings)
-            for path in &start_paths {
-                let _ = write!(&mut script, "[ -f {path} ] && echo {start} > {path}; ");
-            }
-            for path in &stop_paths {
-                let _ = write!(&mut script, "[ -f {path} ] && echo {stop} > {path}; ");
-            }
-
-            // Write alarm
-            let _ = write!(&mut script, "[ -f {alarm_path} ] && echo {alarm_value_str} > {alarm_path}; ");
-
-            // Save config (START_THRESHOLD only if supported)
-            let config_content = if start_spin.is_some() {
-                format!("START_THRESHOLD={start}\\nSTOP_THRESHOLD={stop}\\n")
-            } else {
-                format!("STOP_THRESHOLD={stop}\\n")
-            };
-            let _ = write!(&mut script, "echo '{config_content}' > /etc/battery-manager/{current_battery_clone}.conf; ");
-
-            // Manage service
-            if enable_service {
-                script.push_str("systemctl enable battery-manager.service; ");
-                script.push_str("systemctl start battery-manager.service; ");
-            } else {
-                // If the unit is not installed, systemctl returns non-zero. We don't want that
-                // to fail applying thresholds when the user is explicitly disabling the service.
-                script.push_str("systemctl disable battery-manager.service 2>/dev/null || true; ");
-                script.push_str("systemctl stop battery-manager.service 2>/dev/null || true; ");
-            }
-
-            crate::core::debug::debug_log_args(std::format_args!(
-                "🔧 [SETTINGS_TAB] Prepared script: bytes={}, service_enable={enable_service}",
-                script.len()
-            ));
-
-            // Execute with pkexec
-            // First verify that pkexec is available
-            let pkexec_check = Command::new("which")
-                .arg("pkexec")
-                .output();
-
-            match pkexec_check {
-                Ok(result) if result.status.success() => {
-                    // pkexec exists, proceed
-                    // Security: Script contains only pre-validated numeric values
-                    crate::core::debug::debug_log_args(std::format_args!(
-                        "🔐 [SETTINGS_TAB] pkexec found, executing script via pkexec"
+            match execute_with_pkexec(&script) {
+                ApplyResult::Success => {
+                    let service_status = if enable_service { t("enabled") } else { t("disabled") };
+                    let threshold_msg = if has_start {
+                        format!("{start}%-{stop}%")
+                    } else {
+                        format!("{stop}%")
+                    };
+                    let persistence_note = if enable_service {
+                        String::new()
+                    } else {
+                        format!("\n<span size='small'>{}</span>", t("warning_not_persistent"))
+                    };
+                    status_message.set_markup(&format!(
+                        "<span>✓ {}: {}, {}: {:.1}%, {}: {}{}</span>",
+                        t("settings_applied"), threshold_msg, t("alarm"), alarm_pct,
+                        t("service"), service_status, persistence_note
                     ));
-                    let output = Command::new("pkexec")
-                        .arg("sh")
-                        .arg("-c")
-                        .arg(&script)
-                        .output();
-
-                    match output {
-                        Ok(result) if result.status.success() => {
-                            let service_status = if enable_service { t("enabled") } else { t("disabled") };
-                            let threshold_msg = if start_spin.is_some() {
-                                format!("{start}%-{stop}%")
-                            } else {
-                                format!("{stop}%")
-                            };
-
-                            let persistence_note = if enable_service {
-                                String::new()
-                            } else {
-                                format!("\n<span size='small'>{}</span>", t("warning_not_persistent"))
-                            };
-                            status_message.set_markup(&format!(
-                                "<span>✓ {}: {}, {}: {:.1}%, {}: {}{}</span>",
-                                t("settings_applied"), threshold_msg, t("alarm"), alarm_pct, t("service"), service_status
-                                ,persistence_note
-                            ));
-                            status_message.remove_css_class("color-warning");
-                            status_message.remove_css_class("color-danger");
-                            status_message.add_css_class("color-success");
-                            crate::core::debug::debug_log_args(std::format_args!(
-                                "✅ [SETTINGS_TAB] Settings applied successfully: {threshold_msg}, alarm={alarm_pct:.1}%, service={service_status}"
-                            ));
-                        }
-                        Ok(result) => {
-                            let stderr = String::from_utf8_lossy(&result.stderr);
-                            let stdout = String::from_utf8_lossy(&result.stdout);
-                            let code = result.status.code();
-                            let stderr_preview = truncate_for_log(stderr.trim(), 400);
-                            let stdout_preview = truncate_for_log(stdout.trim(), 400);
-
-                            let ui_error = if !stderr.trim().is_empty() {
-                                stderr_preview.clone()
-                            } else if !stdout.trim().is_empty() {
-                                stdout_preview.clone()
-                            } else {
-                                format!("pkexec returned non-zero status: {code:?}")
-                            };
-
-                            status_message.set_markup(&format!("<span>{}: {}</span>", t("error"), ui_error));
-                            status_message.remove_css_class("color-success");
-                            status_message.remove_css_class("color-warning");
-                            status_message.add_css_class("color-danger");
-                            crate::core::debug::debug_log_args(std::format_args!(
-                                "❌ [SETTINGS_TAB] Script execution failed: code={code:?} stdout='{stdout_preview}' stderr='{stderr_preview}'"
-                            ));
-                        }
-                        Err(err) => {
-                            status_message.set_markup(&format!("<span>{}: {}</span>", t("error_execution"), err));
-                            status_message.remove_css_class("color-success");
-                            status_message.remove_css_class("color-warning");
-                            status_message.add_css_class("color-danger");
-                            crate::core::debug::debug_log_args(std::format_args!(
-                                "❌ [SETTINGS_TAB] Execution error: {err}"
-                            ));
-                        }
-                    }
+                    set_status_class(&status_message, "color-success");
+                    crate::core::debug::debug_log_args(std::format_args!(
+                        "✅ [SETTINGS_TAB] Settings applied successfully: {threshold_msg}, alarm={alarm_pct:.1}%, service={service_status}"
+                    ));
                 }
-                _ => {
-                    status_message.set_markup(&format!("<span>{}: pkexec not installed. Install policykit-1 or polkit.</span>", t("error")));
-                    status_message.remove_css_class("color-success");
-                    status_message.remove_css_class("color-warning");
-                    status_message.add_css_class("color-danger");
-                    crate::core::debug::debug_log_args(std::format_args!(
-                        "❌ [SETTINGS_TAB] pkexec not found (which pkexec failed or returned non-zero)"
+                ApplyResult::Failed(error_msg) => {
+                    status_message.set_markup(&format!("<span>{}: {}</span>", t("error"), error_msg));
+                    set_status_class(&status_message, "color-danger");
+                }
+                ApplyResult::NoPkexec => {
+                    status_message.set_markup(&format!(
+                        "<span>{}: pkexec not installed. Install policykit-1 or polkit.</span>",
+                        t("error")
                     ));
+                    set_status_class(&status_message, "color-danger");
                 }
             }
             }

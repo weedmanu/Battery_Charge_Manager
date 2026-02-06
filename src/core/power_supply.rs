@@ -4,6 +4,8 @@
 
 use std::fs;
 
+use crate::core::i18n::t;
+
 /// AC power supply information
 #[derive(Debug, Clone)]
 pub struct PowerSupplyInfo {
@@ -21,7 +23,7 @@ impl PowerSupplyInfo {
     /// `PowerSupplyInfo` with AC status and device name
     pub fn new() -> Self {
         let mut ac_online = false;
-        let mut ac_name = String::from("Non détecté");
+        let mut ac_name = t("not_detected");
         let mut found_mains = false;
 
         if let Ok(entries) = fs::read_dir("/sys/class/power_supply") {
@@ -59,12 +61,31 @@ impl PowerSupplyInfo {
     ///
     /// # Returns
     ///
-    /// Pango markup with green "🔌 Secteur" or orange "🔋 Batterie"
-    pub const fn get_power_source_markup(&self) -> &'static str {
+    /// Pango markup string for power source status
+    pub fn get_power_source_markup(&self) -> String {
         if self.ac_online {
-            "<span size='xx-large' weight='bold' color='green'>🔌 Secteur</span>"
+            format!(
+                "<span size='xx-large' weight='bold'>🔌 {}</span>",
+                t("on_ac")
+            )
         } else {
-            "<span size='xx-large' weight='bold' color='orange'>🔋 Batterie</span>"
+            format!(
+                "<span size='xx-large' weight='bold'>🔋 {}</span>",
+                t("on_battery")
+            )
+        }
+    }
+
+    /// Returns CSS class for power source color
+    ///
+    /// # Returns
+    ///
+    /// CSS class name ("color-success" for AC, "color-warning" for battery)
+    pub const fn get_power_source_css_class(&self) -> &'static str {
+        if self.ac_online {
+            "color-success"
+        } else {
+            "color-warning"
         }
     }
 }

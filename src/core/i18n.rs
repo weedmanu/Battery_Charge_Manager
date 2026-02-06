@@ -164,6 +164,9 @@ static TRANSLATIONS: std::sync::LazyLock<
     fr.insert("theme_light", "Clair");
     fr.insert("theme_dark", "Sombre");
     fr.insert("theme_applied", "Thème appliqué immédiatement");
+    fr.insert("not_detected", "Non détecté");
+    fr.insert("time_until_full", "jusqu'à plein");
+    fr.insert("time_remaining", "restant");
 
     // Documentation
     fr.insert("documentation", "Documentation");
@@ -313,6 +316,9 @@ static TRANSLATIONS: std::sync::LazyLock<
     en.insert("theme_light", "Light");
     en.insert("theme_dark", "Dark");
     en.insert("theme_applied", "Theme applied immediately");
+    en.insert("not_detected", "Not detected");
+    en.insert("time_until_full", "until full");
+    en.insert("time_remaining", "remaining");
     en.insert("tab_ui", "Interface");
 
     // Documentation

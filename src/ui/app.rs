@@ -330,7 +330,10 @@ fn setup_auto_update(
                 }
 
                 // Update power supply
-                power_source_value.set_markup(power_supply.get_power_source_markup());
+                power_source_value.set_markup(&power_supply.get_power_source_markup());
+                power_source_value.remove_css_class("color-success");
+                power_source_value.remove_css_class("color-warning");
+                power_source_value.add_css_class(power_supply.get_power_source_css_class());
 
                 // Update status
                 status_value.set_markup(&info.get_status_markup());
